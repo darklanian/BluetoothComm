@@ -15,6 +15,7 @@ import javax.bluetooth.DiscoveryListener;
 import javax.bluetooth.LocalDevice;
 import javax.bluetooth.RemoteDevice;
 import javax.bluetooth.ServiceRecord;
+import javax.bluetooth.UUID;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -45,6 +46,8 @@ public class MainFrame extends JFrame implements ActionListener, DiscoveryListen
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setSize(400, 300);
 		initListPanel();
+		
+		System.out.println( new UUID("1101", true).toString() );
 	}
 	
 	private void initListPanel() {
@@ -115,14 +118,14 @@ public class MainFrame extends JFrame implements ActionListener, DiscoveryListen
 		if (discovering)
 			return;
 		
-		lbDiscovering.setVisible(true);
 		devicesDiscovered.clear();
 		try {
 			discovering = LocalDevice.getLocalDevice().getDiscoveryAgent().startInquiry(DiscoveryAgent.GIAC, this);
 			
-			if (discovering)
+			if (discovering) {
+				lbDiscovering.setVisible(true);
 				System.out.println("inquiry started");
-			
+			}
 		} catch (BluetoothStateException e) {
 			e.printStackTrace();
 		}
