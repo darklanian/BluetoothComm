@@ -12,8 +12,8 @@ import android.util.Log;
 
 public class BluetoothClient {
 	private final String TAG = "BluetoothClient";
-	//private final UUID uuid = UUID.fromString("c9faf940-e20c-11e3-9ffa-0002a5d5c51b");
-	private final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+	private final UUID uuid = UUID.fromString("c9faf940-e20c-11e3-9ffa-0002a5d5c51b");
+	//private final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 	
 	BluetoothSocket socket;
 	OutputStreamWriter writer;

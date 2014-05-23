@@ -12,10 +12,10 @@ import javax.microedition.io.StreamConnectionNotifier;
 
 public class BluetoothServer implements Runnable {
 	
-	//private final UUID SERVER_UUID = new UUID("c9faf940e20c11e39ffa0002a5d5c51b", false);
-	private final UUID SERVER_UUID = new UUID("1101", true);
+	private final UUID SERVER_UUID = new UUID("c9faf940e20c11e39ffa0002a5d5c51b", false);
+	//private final UUID SERVER_UUID = new UUID("1101", true);
 	
-	private final String url = "btspp://localhost:"+SERVER_UUID.toString()+";name=SimpleBluetoohServer;authenticate=false;encrypt=false;";
+	private final String url = "btspp://localhost:"+SERVER_UUID.toString()+";name=SimpleBluetoohServer;";
 	
 	@Override
 	public void run() {
