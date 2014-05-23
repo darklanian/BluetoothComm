@@ -47,7 +47,6 @@ public class MainFrame extends JFrame implements ActionListener, DiscoveryListen
 		setSize(400, 300);
 		initListPanel();
 		
-		System.out.println( new UUID("1101", true).toString() );
 	}
 	
 	private void initListPanel() {
