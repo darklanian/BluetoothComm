@@ -1,7 +1,9 @@
 package com.lanian.btbeacon;
 
 import java.io.IOException;
+import java.lang.Thread.State;
 import java.util.UUID;
+
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
@@ -30,7 +32,7 @@ public class BeaconService extends Service implements Runnable {
 		if (listenerThread == null)
 			listenerThread = new Thread(this);
 		
-		if (!listenerThread.isAlive())
+		if (listenerThread.getState() == State.NEW) 
 			listenerThread.start();
 		
 		return START_STICKY;

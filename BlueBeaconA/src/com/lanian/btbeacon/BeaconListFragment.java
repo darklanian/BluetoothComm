@@ -118,6 +118,9 @@ public class BeaconListFragment extends ListFragment {
 		case R.id.action_scan:
 			startScan();		
 			break;
+		case R.id.action_request_discoverable:
+			startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE));
+			break;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
