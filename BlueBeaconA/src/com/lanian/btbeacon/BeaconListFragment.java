@@ -2,7 +2,9 @@ package com.lanian.btbeacon;
 
 import java.util.Vector;
 
+import android.app.Activity;
 import android.app.ListFragment;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -15,13 +17,22 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 public class BeaconListFragment extends ListFragment {
 	static final String TAG = "BlueBeacon";
 	
 	Vector<BluetoothDevice> foundDevices = new Vector<BluetoothDevice>();
 	BluetoothDevice currentDevice;
+	ProgressDialog progressDialog;
+	ArrayAdapter<BluetoothDevice> adapter;
+	OnBeaconClickListener listener;
+	
+	public static interface OnBeaconClickListener {
+		public void onBeaconClick(BluetoothDevice dev); 
+	}
 	
 	BroadcastReceiver btScaningReceiver = new BroadcastReceiver() {
 
@@ -31,63 +42,50 @@ public class BeaconListFragment extends ListFragment {
 				Log.d(TAG, BluetoothAdapter.ACTION_DISCOVERY_STARTED);
 			} else if (intent.getAction().equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)) {
 				Log.d(TAG, BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-				for (BluetoothDevice d : foundDevices) {
-					Log.d(TAG, d.getName());
-				}
-				if (!foundDevices.isEmpty()) {
-					currentDevice = foundDevices.get(0);
-					foundDevices.removeElementAt(0);
-					Log.d(TAG, currentDevice.getName()+" fetchUuidsWithSdp()");
-					currentDevice.fetchUuidsWithSdp();
-					
-					
-				}
+				fetchUuids();
 			} else if (intent.getAction().equals(BluetoothDevice.ACTION_FOUND)) {
 				Log.d(TAG, BluetoothDevice.ACTION_FOUND);
 				BluetoothDevice dev = (BluetoothDevice)intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-				Log.d(TAG, dev.getName());
-				foundDevices.add(dev);
+				if (dev != null) {
+					String deviceName = dev.getName();
+					if (deviceName == null)
+						Log.e(TAG, "getName() failed");
+					else
+						Log.d(TAG, dev.getName());
+					foundDevices.add(dev);
+				} else {
+					Log.e(TAG, "couldn't get BluetoothDevice");
+				}
 			}  else if (intent.getAction().equals(BluetoothDevice.ACTION_UUID)) {
 				Log.d(TAG, BluetoothDevice.ACTION_UUID);
 				BluetoothDevice dev = (BluetoothDevice)intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-				Log.d(TAG, dev.getName());
-				if (currentDevice != null && dev.getAddress().equals(currentDevice.getAddress())) {
-					Parcelable[] uuids = intent.getParcelableArrayExtra(BluetoothDevice.EXTRA_UUID);
-					if (uuids != null) {
-						
-						for (Parcelable uuid : uuids) {
-							Log.d(TAG, uuid.toString());
-							if (uuid.toString().compareTo(BeaconService.SERVICE_UUID.toString()) == 0) {
-								adapter.add(currentDevice);
-								adapter.notifyDataSetChanged();
-								break;
+				if (dev != null) {
+					Log.d(TAG, dev.getName());
+					if (currentDevice != null && dev.getAddress().equals(currentDevice.getAddress())) {
+						Parcelable[] uuids = intent.getParcelableArrayExtra(BluetoothDevice.EXTRA_UUID);
+						if (uuids != null) {
+							
+							for (Parcelable uuid : uuids) {
+								if (uuid.toString().compareTo(BeaconService.SERVICE_UUID.toString()) == 0) {
+									adapter.add(currentDevice);
+									adapter.notifyDataSetChanged();
+									break;
+								}
 							}
-						}
-					
-					} else {
-						Log.e(TAG, "couldn't get UUIDs");
-					}
-					
-					if (!foundDevices.isEmpty()) {
-						currentDevice = foundDevices.get(0);
-						foundDevices.removeElementAt(0);
-						Log.d(TAG, currentDevice.getName()+" fetchUuidsWithSdp()");
-						currentDevice.fetchUuidsWithSdp();	
 						
-					} else {
-						Log.d(TAG, "Scanning finished");
-						currentDevice = null;
-						getActivity().unregisterReceiver(btScaningReceiver);
+						} else {
+							Log.e(TAG, "couldn't get UUIDs");
+						}
+						
+						fetchUuids();
 					}
 				} else {
-					
+					Log.e(TAG, "couldn't get BluetoothDevice");
 				}
 			}
 		}
 		
 	};
-	
-	ArrayAdapter<BluetoothDevice> adapter;
 	
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -96,6 +94,17 @@ public class BeaconListFragment extends ListFragment {
 		
 		adapter = new ArrayAdapter<BluetoothDevice>(getActivity(), android.R.layout.simple_list_item_1);
 		setListAdapter(adapter);
+	}
+	
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		
+		try {
+			listener = (OnBeaconClickListener)activity;
+		} catch (ClassCastException e) {
+			Log.w(TAG, "OnBeaconClickListener is not set");
+		}
 	}
 		
 	@Override
@@ -107,8 +116,7 @@ public class BeaconListFragment extends ListFragment {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.action_scan:
-			startScan();
-			
+			startScan();		
 			break;
 		default:
 			return super.onOptionsItemSelected(item);
@@ -126,6 +134,14 @@ public class BeaconListFragment extends ListFragment {
 		super.onPause();
 	}
 	
+	@Override
+	public void onListItemClick(ListView l, View v, int position, long id) {
+		//super.onListItemClick(l, v, position, id);
+		if (listener != null) {
+			listener.onBeaconClick(adapter.getItem(position));
+		}
+	}
+	
 	private void startScan() {
 		if (BluetoothAdapter.getDefaultAdapter().isDiscovering())
 			return;
@@ -138,7 +154,24 @@ public class BeaconListFragment extends ListFragment {
 		filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
 		filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
 		getActivity().registerReceiver(btScaningReceiver, filter);
-		BluetoothAdapter.getDefaultAdapter().startDiscovery();
+		if (BluetoothAdapter.getDefaultAdapter().startDiscovery()) {
+			progressDialog = ProgressDialog.show(getActivity(), getActivity().getText(R.string.title_scanning), getActivity().getText(R.string.message_scanning));
+		} else {
+			Log.e(TAG, "startDiscovery() failed");
+		}
+	}
+	
+	private void fetchUuids() {
+		if (!foundDevices.isEmpty()) {
+			currentDevice = foundDevices.get(0);
+			foundDevices.removeElementAt(0);
+			Log.d(TAG, currentDevice.getName()+" fetchUuidsWithSdp()");
+			currentDevice.fetchUuidsWithSdp();
+		} else {
+			Log.d(TAG, "Scanning finished");
+			progressDialog.dismiss();
+			getActivity().unregisterReceiver(btScaningReceiver);
+		}
 	}
 	
 }
