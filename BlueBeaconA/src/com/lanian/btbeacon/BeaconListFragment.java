@@ -1,5 +1,7 @@
 package com.lanian.btbeacon;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Vector;
 
 import android.app.Activity;
@@ -11,6 +13,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
@@ -23,6 +26,9 @@ import android.widget.ListView;
 
 public class BeaconListFragment extends ListFragment {
 	static final String TAG = "BlueBeacon";
+	
+	private static final String SHARED_PREFERENCE_BEACON_LIST = "beacon_list";
+	private static final String KEY_REMEMBERED_BEACONS = "remebered";
 	
 	Vector<BluetoothDevice> foundDevices = new Vector<BluetoothDevice>();
 	BluetoothDevice currentDevice;
@@ -67,8 +73,7 @@ public class BeaconListFragment extends ListFragment {
 							
 							for (Parcelable uuid : uuids) {
 								if (uuid.toString().compareTo(BeaconService.SERVICE_UUID.toString()) == 0) {
-									adapter.add(currentDevice);
-									adapter.notifyDataSetChanged();
+									onFoundBeacon(currentDevice);
 									break;
 								}
 							}
@@ -94,6 +99,7 @@ public class BeaconListFragment extends ListFragment {
 		
 		adapter = new ArrayAdapter<BluetoothDevice>(getActivity(), android.R.layout.simple_list_item_1);
 		setListAdapter(adapter);
+		loadRemeberedBeacons();
 	}
 	
 	@Override
@@ -151,6 +157,7 @@ public class BeaconListFragment extends ListFragment {
 		
 		adapter.clear();
 		adapter.notifyDataSetChanged();
+		loadRemeberedBeacons();
 		
 		IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
 		filter.addAction(BluetoothDevice.ACTION_UUID);
@@ -177,4 +184,41 @@ public class BeaconListFragment extends ListFragment {
 		}
 	}
 	
+	private void loadRemeberedBeacons() {
+		SharedPreferences sp = getActivity().getSharedPreferences(SHARED_PREFERENCE_BEACON_LIST, Context.MODE_PRIVATE);
+		Set<String> remembered = sp.getStringSet(KEY_REMEMBERED_BEACONS, null);
+		if (remembered != null) {
+			for (String address : remembered) {
+				BluetoothDevice dev = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address);
+				if (dev != null)
+					adapter.add(dev);
+			}
+			adapter.notifyDataSetChanged();
+		}
+	}
+	
+	private void rememberBeacon(String address) {
+		SharedPreferences sp = getActivity().getSharedPreferences(SHARED_PREFERENCE_BEACON_LIST, Context.MODE_PRIVATE);
+		Set<String> remembered = sp.getStringSet(KEY_REMEMBERED_BEACONS, new HashSet<String>());
+		if (remembered.add(address)) {
+			sp.edit().putStringSet(KEY_REMEMBERED_BEACONS, remembered).commit();
+		}
+	}
+	
+	private void onFoundBeacon(BluetoothDevice dev) {
+		
+		boolean exist = false;
+		for (int i = 0; i < adapter.getCount(); ++i) {
+			if (adapter.getItem(i).getAddress().equals(dev.getAddress())) {
+				exist = true;
+				break;
+			}
+		}
+		if (exist)
+			return;
+		
+		adapter.add(dev);
+		adapter.notifyDataSetChanged();
+		rememberBeacon(dev.getAddress());
+	}
 }
