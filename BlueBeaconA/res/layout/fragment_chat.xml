@@ -33,7 +33,9 @@
         android:id="@+id/listView_messages"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/layout_input" >
+        android:layout_above="@+id/layout_input"
+        android:stackFromBottom="true"
+        android:transcriptMode="alwaysScroll" >
 
     </ListView>
 

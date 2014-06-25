@@ -1,16 +1,17 @@
 package com.lanian.btbeacon;
 
 import java.io.IOException;
-import java.lang.Thread.State;
 import java.lang.ref.WeakReference;
 import java.util.UUID;
 import java.util.Vector;
 
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -18,16 +19,18 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-public class BeaconService extends Service implements Runnable {
+public class BeaconService extends Service implements Runnable, BeaconConnection.BeaconConnectionListener {
 	static final String SERVICE_NAME = "BlueBeacon";
 	public static final UUID SERVICE_UUID = UUID.fromString("c9faf940-e20c-11e3-9ffa-0002a5d5c51b");
 	public static final String EXTRA_BT_ADDRESS = "extra_bt_address";
 	
 	public static final int MSG_HELLO = 1;
+	public static final int MSG_SEND_MESSAGE = 2;
+	public static final String MSG_DATA_ADDRESS = "address";
+	public static final String MSG_DATA_MESSAGE = "message";
 	
-	Thread listenerThread;
 	BluetoothServerSocket serverSocket;
-	Vector<BluetoothSocket> clientSockets = new Vector<BluetoothSocket>();
+	Vector<BeaconConnection> connections = new Vector<BeaconConnection>();
 	Messenger replyTo;
 	
 	static class SimpleHandler extends Handler {
@@ -77,23 +80,34 @@ public class BeaconService extends Service implements Runnable {
 				}
 			}
 			return true;
+		case MSG_SEND_MESSAGE:
+			sendMessageTo(msg.getData());
+			return true;
 		}
 		return false;
 	}
-
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		Log.d(SERVICE_NAME, "onStartCommand");
-		
-		if (listenerThread == null)
-			listenerThread = new Thread(this);
-		
-		if (listenerThread.getState() == State.NEW) 
-			listenerThread.start();
-		
-		return START_STICKY;
-	}
 	
+	private boolean sendMessageTo(Bundle data) {
+		String address = data.getString(MSG_DATA_ADDRESS);
+		String message = data.getString(MSG_DATA_MESSAGE);
+		
+		BeaconConnection connection = null;
+		for (BeaconConnection conn : connections) {
+			if (conn.dev.getAddress().equals(address)) {
+				connection = conn;
+				break;
+			}
+		}
+		if (connection == null) {
+			connection = connect(address);
+		}
+		
+		if (connection == null)
+			return false;
+		
+		return connection.sendMessage(message);
+	}
+
 	@Override
 	public void run() {
 		try {
@@ -103,13 +117,20 @@ public class BeaconService extends Service implements Runnable {
 				Log.d(SERVICE_NAME, "BlueBeacon is waiting for a client");
 				BluetoothSocket clientSocket = serverSocket.accept();
 				Log.d(SERVICE_NAME, "A client is connected: "+clientSocket.getRemoteDevice().getAddress());
-				clientSockets.add(clientSocket);
-				startActivity(new Intent(this, MainActivity.class).putExtra(EXTRA_BT_ADDRESS, clientSocket.getRemoteDevice().getAddress()));
+				connections.add(new BeaconConnection(this, clientSocket, clientSocket.getRemoteDevice(), this));
+				showChatView(clientSocket.getRemoteDevice().getAddress());
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Log.d(SERVICE_NAME, "Listening thread stopped.");
 		}
+	}
+	
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		Log.d(SERVICE_NAME, "onCreate");
+		new Thread(this).start();
 	}
 
 	@Override
@@ -119,10 +140,76 @@ public class BeaconService extends Service implements Runnable {
 			try {
 				serverSocket.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
+		disconnectAll();
 		super.onDestroy();
+	}
+	
+	private void disconnectAll() {
+		synchronized (connections) {
+			Log.d(SERVICE_NAME, String.format("disconnecting all connections...(%d)", connections.size()));
+			for (BeaconConnection conn : connections) {
+				conn.disconnect();
+			}
+		}
+	}
+
+	@Override
+	public void onDisconnected(BeaconConnection conn) {
+		synchronized (connections) {
+			Log.d(SERVICE_NAME, "onDisconnected: "+conn.getRemoteAddress());
+			if (!connections.remove(conn)) 
+				Log.e(SERVICE_NAME, "onDisconnected: disconnected connection is not found in connection list");
+			Log.d(SERVICE_NAME, "onDisconnected: number of remaining connection(s) = "+connections.size());
+		}
+	}
+	
+	private BeaconConnection connect(BluetoothDevice dev) {
+		if (dev == null)
+			return null;
+		
+		BluetoothSocket socket;
+		try {
+			socket = dev.createRfcommSocketToServiceRecord(SERVICE_UUID);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+		
+		int tryCount = 0;
+		while (tryCount < 5) {
+			try {
+				socket.connect();
+				BeaconConnection conn = new BeaconConnection(this, socket, dev, this);
+				connections.add(conn);
+				return conn;
+			} catch (IOException e) {
+				tryCount++;
+			}
+		}
+		
+		return null;
+	}
+	
+	private BeaconConnection connect(String address) {
+		return connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address));
+	}
+	
+	private void showChatView(String remoteAddress) {
+		if (replyTo == null)
+			return;
+		Bundle data = new Bundle();
+		data.putString(MainActivity.MSG_DATA_ADDRESS, remoteAddress);
+		Message msg = Message.obtain(null, MainActivity.MSG_SHOW_CHAT_VIEW);
+		msg.setData(data);
+		try {
+			replyTo.send(msg);
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

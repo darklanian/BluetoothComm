@@ -28,6 +28,7 @@
 
         <service android:name="com.lanian.btbeacon.BeaconService" >
         </service>
+        <provider android:authorities="MessageProviderAuthorities" android:name="MessageProvider"></provider>
     </application>
 
 </manifest>
