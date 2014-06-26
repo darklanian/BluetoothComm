@@ -2,20 +2,24 @@ package com.lanian.btbeacon;
 
 import android.app.Fragment;
 import android.app.LoaderManager.LoaderCallbacks;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 
 public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
@@ -48,13 +52,37 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 		});
 		
 		messageAdapter = new SimpleCursorAdapter(getActivity(), 
-				android.R.layout.simple_list_item_1, 
+				R.layout.message_list_item, 
 				null, 
 				new String[] {MessageDBHelper.MessageEntry.COLUMN_NAME_MESSAGE}, 
-				new int[] { android.R.id.text1 }, 
-				CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+				new int[] { R.id.textView1 }, 
+				CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER) {
+			@Override
+			public void bindView(View view, Context context,
+					Cursor cursor) {
+				// TODO Auto-generated method stub
+				super.bindView(view, context, cursor);
+				
+				TextView tv = (TextView)view.findViewById(R.id.textView1);
+				
+				tv.setText(cursor.getString(cursor.getColumnIndex(MessageDBHelper.MessageEntry.COLUMN_NAME_MESSAGE)));
+				int direction = cursor.getInt(cursor.getColumnIndex(MessageDBHelper.MessageEntry.COLUMN_NAME_DIRECTION));
+				LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(tv.getLayoutParams());
+				if (direction == MessageDBHelper.MessageEntry.COLUMN_VALUE_DIRECTION_RECEIVE) {
+					lp.gravity = Gravity.LEFT;
+					tv.setLayoutParams(lp);
+					tv.setBackgroundColor(getResources().getColor(R.color.background_received_message));
+				} else if (direction == MessageDBHelper.MessageEntry.COLUMN_VALUE_DIRECTION_SEND) {
+					lp.gravity = Gravity.RIGHT;
+					tv.setLayoutParams(lp);
+					tv.setBackgroundColor(getResources().getColor(R.color.background_sent_message));
+				}
+			}
+		};
+		
 		
 		ListView listView = (ListView)rootView.findViewById(R.id.listView_messages);
+		listView.setDivider(null);
 		listView.setAdapter(messageAdapter);
 		
 		
