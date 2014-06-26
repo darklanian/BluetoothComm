@@ -54,7 +54,7 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 		messageAdapter = new SimpleCursorAdapter(getActivity(), 
 				R.layout.message_list_item, 
 				null, 
-				new String[] {MessageDBHelper.MessageEntry.COLUMN_NAME_MESSAGE}, 
+				new String[] {BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_MESSAGE}, 
 				new int[] { R.id.textView1 }, 
 				CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER) {
 			@Override
@@ -65,14 +65,14 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 				
 				TextView tv = (TextView)view.findViewById(R.id.textView1);
 				
-				tv.setText(cursor.getString(cursor.getColumnIndex(MessageDBHelper.MessageEntry.COLUMN_NAME_MESSAGE)));
-				int direction = cursor.getInt(cursor.getColumnIndex(MessageDBHelper.MessageEntry.COLUMN_NAME_DIRECTION));
+				tv.setText(cursor.getString(cursor.getColumnIndex(BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_MESSAGE)));
+				int direction = cursor.getInt(cursor.getColumnIndex(BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_DIRECTION));
 				LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(tv.getLayoutParams());
-				if (direction == MessageDBHelper.MessageEntry.COLUMN_VALUE_DIRECTION_RECEIVE) {
+				if (direction == BlueBeaconDBHelper.MessageEntry.COLUMN_VALUE_DIRECTION_RECEIVE) {
 					lp.gravity = Gravity.LEFT;
 					tv.setLayoutParams(lp);
 					tv.setBackgroundColor(getResources().getColor(R.color.background_received_message));
-				} else if (direction == MessageDBHelper.MessageEntry.COLUMN_VALUE_DIRECTION_SEND) {
+				} else if (direction == BlueBeaconDBHelper.MessageEntry.COLUMN_VALUE_DIRECTION_SEND) {
 					lp.gravity = Gravity.RIGHT;
 					tv.setLayoutParams(lp);
 					tv.setBackgroundColor(getResources().getColor(R.color.background_sent_message));
@@ -95,7 +95,7 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 			}
 		};
 		
-		getActivity().getContentResolver().registerContentObserver(MessageProvider.CONTENT_URI, true, observer);
+		getActivity().getContentResolver().registerContentObserver(BlueBeaconProvider.CONTENT_URI, true, observer);
 		
 		return rootView;
 	}
@@ -133,11 +133,11 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-		return new CursorLoader(getActivity(), MessageProvider.CONTENT_URI, 
-				new String[] { MessageDBHelper.MessageEntry._ID, MessageDBHelper.MessageEntry.COLUMN_NAME_ADDRESS, MessageDBHelper.MessageEntry.COLUMN_NAME_DIRECTION, MessageDBHelper.MessageEntry.COLUMN_NAME_MESSAGE, MessageDBHelper.MessageEntry.COLUMN_NAME_TIME }, 
-				MessageDBHelper.MessageEntry.COLUMN_NAME_ADDRESS+"=?", 
+		return new CursorLoader(getActivity(), BlueBeaconProvider.CONTENT_URI, 
+				new String[] { BlueBeaconDBHelper.MessageEntry._ID, BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_ADDRESS, BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_DIRECTION, BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_MESSAGE, BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_TIME }, 
+				BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_ADDRESS+"=?", 
 				new String[] { remoteAddress }, 
-				MessageDBHelper.MessageEntry.COLUMN_NAME_TIME+" ASC");
+				BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_TIME+" ASC");
 	}
 
 	@Override

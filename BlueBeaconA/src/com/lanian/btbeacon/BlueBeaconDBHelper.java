@@ -5,9 +5,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
-public class MessageDBHelper extends SQLiteOpenHelper {
+public class BlueBeaconDBHelper extends SQLiteOpenHelper {
 
-	private static final String DB_NAME = "messages.db";
+	private static final String DB_NAME = "bluebeacon.db";
 	private static final int DB_VERSION = 1;
 	
 	public static abstract class MessageEntry implements BaseColumns {
@@ -21,7 +21,14 @@ public class MessageDBHelper extends SQLiteOpenHelper {
 		public static final int COLUMN_VALUE_DIRECTION_SEND = 1;
 	}
 	
-	private static final String SQL_CREATE_ENTRIES = 
+	public static abstract class BeaconEntry implements BaseColumns {
+		public static final String TABLE_NAME = "beacons";
+		public static final String COLUMN_NAME_ADDRESS = "address";
+		public static final String COLUMN_NAME_ALIAS = "alias";
+		public static final String COLUMN_NAME_BANNED = "banned";		
+	}
+	
+	private static final String SQL_CREATE_MESSAGE_ENTRIES = 
 			"CREATE TABLE "+MessageEntry.TABLE_NAME+" ("+
 					MessageEntry._ID+" INTEGER PRIMARY KEY,"+
 					MessageEntry.COLUMN_NAME_ADDRESS+" TEXT,"+
@@ -30,13 +37,23 @@ public class MessageDBHelper extends SQLiteOpenHelper {
 					MessageEntry.COLUMN_NAME_TIME+" TEXT"+
 			")";
 	
-	public MessageDBHelper(Context context) {
+	private static final String SQL_CREATE_BEACON_ENTRIES = 
+			"CREATE TABLE "+BeaconEntry.TABLE_NAME+" ("+
+					BeaconEntry._ID+" INTEGER PRIMARY KEY,"+
+					BeaconEntry.COLUMN_NAME_ADDRESS+" TEXT UNIQUE,"+
+					BeaconEntry.COLUMN_NAME_ALIAS+" TEXT,"+
+					BeaconEntry.COLUMN_NAME_BANNED+" INTEGER"+
+					
+			")";
+	
+	public BlueBeaconDBHelper(Context context) {
 		super(context, DB_NAME, null, DB_VERSION);
 	}
 	
 	@Override
 	public void onCreate(SQLiteDatabase db) {
-		db.execSQL(SQL_CREATE_ENTRIES);
+		db.execSQL(SQL_CREATE_MESSAGE_ENTRIES);
+		db.execSQL(SQL_CREATE_BEACON_ENTRIES);
 		
 		
 	}

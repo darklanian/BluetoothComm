@@ -1,7 +1,5 @@
 package com.lanian.btbeacon;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.Vector;
 
 import android.app.Activity;
@@ -10,25 +8,27 @@ import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 public class BeaconListFragment extends ListFragment {
 	static final String TAG = "BlueBeacon";
-	
-	private static final String SHARED_PREFERENCE_BEACON_LIST = "beacon_list";
-	private static final String KEY_REMEMBERED_BEACONS = "remebered";
 	
 	Vector<BluetoothDevice> foundDevices = new Vector<BluetoothDevice>();
 	BluetoothDevice currentDevice;
@@ -58,7 +58,15 @@ public class BeaconListFragment extends ListFragment {
 						Log.e(TAG, "getName() failed");
 					else
 						Log.d(TAG, dev.getName());
-					foundDevices.add(dev);
+					boolean dup = false;
+					for (BluetoothDevice d : foundDevices) {
+						if (d.getAddress().equals(dev.getAddress())) {
+							dup = true;
+							break;
+						}
+					}
+					if (!dup)
+						foundDevices.add(dev);
 				} else {
 					Log.e(TAG, "couldn't get BluetoothDevice");
 				}
@@ -97,9 +105,11 @@ public class BeaconListFragment extends ListFragment {
 		super.onActivityCreated(savedInstanceState);
 		setHasOptionsMenu(true);
 		
+		registerForContextMenu(getListView());
+		
 		adapter = new ArrayAdapter<BluetoothDevice>(getActivity(), android.R.layout.simple_list_item_1);
 		setListAdapter(adapter);
-		loadRemeberedBeacons();
+		
 	}
 	
 	@Override
@@ -151,13 +161,13 @@ public class BeaconListFragment extends ListFragment {
 		}
 	}
 	
+	
 	private void startScan() {
 		if (BluetoothAdapter.getDefaultAdapter().isDiscovering())
 			return;
 		
 		adapter.clear();
 		adapter.notifyDataSetChanged();
-		loadRemeberedBeacons();
 		
 		IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
 		filter.addAction(BluetoothDevice.ACTION_UUID);
@@ -184,30 +194,10 @@ public class BeaconListFragment extends ListFragment {
 		}
 	}
 	
-	private void loadRemeberedBeacons() {
-		SharedPreferences sp = getActivity().getSharedPreferences(SHARED_PREFERENCE_BEACON_LIST, Context.MODE_PRIVATE);
-		Set<String> remembered = sp.getStringSet(KEY_REMEMBERED_BEACONS, null);
-		if (remembered != null) {
-			for (String address : remembered) {
-				BluetoothDevice dev = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address);
-				if (dev != null)
-					adapter.add(dev);
-			}
-			adapter.notifyDataSetChanged();
-		}
-	}
-	
-	private void rememberBeacon(String address) {
-		SharedPreferences sp = getActivity().getSharedPreferences(SHARED_PREFERENCE_BEACON_LIST, Context.MODE_PRIVATE);
-		Set<String> remembered = sp.getStringSet(KEY_REMEMBERED_BEACONS, new HashSet<String>());
-		if (remembered.add(address)) {
-			sp.edit().putStringSet(KEY_REMEMBERED_BEACONS, remembered).commit();
-		}
-	}
 	
 	private void onFoundBeacon(BluetoothDevice dev) {
 		
-		boolean exist = false;
+		/*boolean exist = false;
 		for (int i = 0; i < adapter.getCount(); ++i) {
 			if (adapter.getItem(i).getAddress().equals(dev.getAddress())) {
 				exist = true;
@@ -215,10 +205,54 @@ public class BeaconListFragment extends ListFragment {
 			}
 		}
 		if (exist)
-			return;
+			return;*/
 		
 		adapter.add(dev);
 		adapter.notifyDataSetChanged();
-		rememberBeacon(dev.getAddress());
+
+	}
+
+	
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		// TODO Auto-generated method stub
+		super.onCreateContextMenu(menu, v, menuInfo);
+		getActivity().getMenuInflater().inflate(R.menu.scanned_beacons, menu);
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
+		switch (item.getItemId()) {
+		case R.id.action_store_beacon:
+			storeBeacon(adapter.getItem(info.position).getAddress());
+			break;
+		default:
+			return super.onContextItemSelected(item);
+		}
+		
+		return true;
+	}
+	
+	private void storeBeacon(String address) {
+		new AsyncTask<String, Integer, Boolean>() {
+
+			@Override
+			protected Boolean doInBackground(String... params) {
+				ContentValues values = new ContentValues();
+				values.put(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ADDRESS, params[0]);
+				values.put(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ALIAS, "");
+				values.put(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_BANNED, 0);
+				return (null != getActivity().getContentResolver().insert(BlueBeaconProvider.CONTENT_URI_BEACON, values));
+			}
+			
+			protected void onPostExecute(Boolean result) {
+				if (!result) {
+					Toast.makeText(getActivity(), R.string.toast_error_could_not_store_beacon, Toast.LENGTH_SHORT).show();
+				}
+			}
+			
+		}.execute(address);
 	}
 }

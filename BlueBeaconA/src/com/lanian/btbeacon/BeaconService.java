@@ -111,7 +111,7 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 	@Override
 	public void run() {
 		try {
-			serverSocket = BluetoothAdapter.getDefaultAdapter().listenUsingRfcommWithServiceRecord(SERVICE_NAME, SERVICE_UUID);
+			serverSocket = BluetoothAdapter.getDefaultAdapter().listenUsingInsecureRfcommWithServiceRecord(SERVICE_NAME, SERVICE_UUID);
 			
 			while (true) {
 				Log.d(SERVICE_NAME, "BlueBeacon is waiting for a client");
@@ -172,7 +172,8 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 		
 		BluetoothSocket socket;
 		try {
-			socket = dev.createRfcommSocketToServiceRecord(SERVICE_UUID);
+			//socket = dev.createRfcommSocketToServiceRecord(SERVICE_UUID);
+			socket = dev.createInsecureRfcommSocketToServiceRecord(SERVICE_UUID);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -60,13 +60,13 @@ public class BeaconConnection implements Runnable {
 
 	private void storeMessage(String message, int direction) {
 		ContentValues values = new ContentValues();
-		values.put(MessageDBHelper.MessageEntry.COLUMN_NAME_ADDRESS, remoteAddress);
-		values.put(MessageDBHelper.MessageEntry.COLUMN_NAME_DIRECTION, direction);
-		values.put(MessageDBHelper.MessageEntry.COLUMN_NAME_MESSAGE, message);
+		values.put(BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_ADDRESS, remoteAddress);
+		values.put(BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_DIRECTION, direction);
+		values.put(BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_MESSAGE, message);
 		Time time = new Time();
 		time.setToNow();
-		values.put(MessageDBHelper.MessageEntry.COLUMN_NAME_TIME, time.format("%Y-%m-%dT%H:%M:%S"));
-		Uri uri = context.getContentResolver().insert(MessageProvider.CONTENT_URI, values);
+		values.put(BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_TIME, time.format("%Y-%m-%dT%H:%M:%S"));
+		Uri uri = context.getContentResolver().insert(BlueBeaconProvider.CONTENT_URI, values);
 		if (uri == null)
 			Log.e(TAG, "couldn't insert message to DB");
 	}
@@ -74,7 +74,7 @@ public class BeaconConnection implements Runnable {
 	private void onReceiveMessage(DataInputStream in) throws IOException {
 		String message = in.readUTF();
 		Log.d(TAG, "onReceiveMessage: "+message);
-		storeMessage(message, MessageDBHelper.MessageEntry.COLUMN_VALUE_DIRECTION_RECEIVE);
+		storeMessage(message, BlueBeaconDBHelper.MessageEntry.COLUMN_VALUE_DIRECTION_RECEIVE);
 	}
 	
 	public boolean sendMessage(String message) {
@@ -83,7 +83,7 @@ public class BeaconConnection implements Runnable {
 			out.writeByte(CMD_SEND_MESSAGE);
 			out.writeUTF(message);
 			out.flush();
-			storeMessage(message, MessageDBHelper.MessageEntry.COLUMN_VALUE_DIRECTION_SEND);
+			storeMessage(message, BlueBeaconDBHelper.MessageEntry.COLUMN_VALUE_DIRECTION_SEND);
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();

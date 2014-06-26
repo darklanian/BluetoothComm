@@ -19,16 +19,25 @@
         <activity
             android:name="com.lanian.btbeacon.MainActivity"
             android:label="@string/app_name" >
+        </activity>
+
+        <service android:name="com.lanian.btbeacon.BeaconService" >
+        </service>
+
+        <provider
+            android:name="com.lanian.btbeacon.BlueBeaconProvider"
+            android:authorities="BlueBeaconProviderAuthorities" >
+        </provider>
+
+        <activity
+            android:name="com.lanian.btbeacon.BlueBeaconActivity"
+            android:label="@string/title_activity_blue_beacon" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service android:name="com.lanian.btbeacon.BeaconService" >
-        </service>
-        <provider android:authorities="MessageProviderAuthorities" android:name="MessageProvider"></provider>
     </application>
 
 </manifest>
