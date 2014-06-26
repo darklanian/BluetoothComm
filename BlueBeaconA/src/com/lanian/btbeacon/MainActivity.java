@@ -60,7 +60,7 @@ public class MainActivity extends Activity implements ScannedBeaconListFragment.
 			Log.d(TAG, "OK");
 			break;
 		case MSG_SHOW_CHAT_VIEW:
-			getFragmentManager().beginTransaction().replace(R.id.container, new ChatFragment().setRemoteAddress(msg.getData().getString(MSG_DATA_ADDRESS)).setBeaconServiceManager(this)).addToBackStack("ChatFragment").commit();
+			//getFragmentManager().beginTransaction().replace(R.id.container, new ChatFragment().setRemoteAddress(msg.getData().getString(MSG_DATA_ADDRESS)).setBeaconServiceManager(this)).addToBackStack("ChatFragment").commit();
 			break;
 		default:
 			return false;
@@ -106,7 +106,7 @@ public class MainActivity extends Activity implements ScannedBeaconListFragment.
 	
 	@Override
 	public void onBeaconClick(BluetoothDevice dev) {
-		getFragmentManager().beginTransaction().replace(R.id.container, new ChatFragment().setRemoteAddress(dev.getAddress()).setBeaconServiceManager(this)).addToBackStack("ChatFragment").commit();
+		//getFragmentManager().beginTransaction().replace(R.id.container, new ChatFragment().setRemoteAddress(dev.getAddress()).setBeaconServiceManager(this)).addToBackStack("ChatFragment").commit();
 		
 	}
 

@@ -68,7 +68,8 @@ public class BlueBeaconActivity extends Activity implements
 			Log.d(TAG, "OK");
 			break;
 		case MSG_SHOW_CHAT_VIEW:
-			getFragmentManager().beginTransaction().replace(R.id.container, new ChatFragment().setRemoteAddress(msg.getData().getString(MSG_DATA_ADDRESS)).setBeaconServiceManager(this)).addToBackStack("ChatFragment").commit();
+			currentOpponent = msg.getData().getString(MSG_DATA_ADDRESS);
+			mViewPager.setCurrentItem(TAB_MESSAGE);
 			break;
 		default:
 			return false;
@@ -76,7 +77,7 @@ public class BlueBeaconActivity extends Activity implements
 		return true;
 	}
 	
-ServiceConnection serviceConnection = new ServiceConnection() {
+	ServiceConnection serviceConnection = new ServiceConnection() {
 		
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
@@ -96,6 +97,8 @@ ServiceConnection serviceConnection = new ServiceConnection() {
 			}
 		}
 	};
+	
+	String currentOpponent;
 
 	@Override
 	protected void onStart() {
@@ -243,6 +246,8 @@ ServiceConnection serviceConnection = new ServiceConnection() {
 				return new ScannedBeaconListFragment();
 			case TAB_BANNED:
 				return StoredBeaconListFragment.newInstance(true);
+			case TAB_MESSAGE:
+				return ChatFragment.newInstance(currentOpponent, BlueBeaconActivity.this);
 			}
 			return PlaceholderFragment.newInstance(position + 1);
 		}
@@ -300,6 +305,7 @@ ServiceConnection serviceConnection = new ServiceConnection() {
 
 	@Override
 	public void onBeaconSelected(String address) {
+		currentOpponent = address;
 		mViewPager.setCurrentItem(TAB_MESSAGE);
 	}
 

@@ -23,20 +23,17 @@ import android.widget.TextView;
 
 public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
+	public static ChatFragment newInstance(String address, BeaconServiceManager serviceManager) {
+		ChatFragment fragment = new ChatFragment();
+		fragment.remoteAddress = address;
+		fragment.beaconService = serviceManager;
+		return fragment;
+	}
+	
 	String remoteAddress;
 	BeaconServiceManager beaconService;
 	SimpleCursorAdapter messageAdapter;
 	ContentObserver observer;
-	
-	public ChatFragment setRemoteAddress(String address) {
-		remoteAddress = address;
-		return this;
-	}
-	
-	public Fragment setBeaconServiceManager(BeaconServiceManager serviceManager) {
-		beaconService = serviceManager;
-		return this;
-	}
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -95,7 +92,7 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 			}
 		};
 		
-		getActivity().getContentResolver().registerContentObserver(BlueBeaconProvider.CONTENT_URI, true, observer);
+		getActivity().getContentResolver().registerContentObserver(BlueBeaconProvider.CONTENT_URI_MESSAGE, false, observer);
 		
 		return rootView;
 	}
@@ -133,7 +130,7 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-		return new CursorLoader(getActivity(), BlueBeaconProvider.CONTENT_URI, 
+		return new CursorLoader(getActivity(), BlueBeaconProvider.CONTENT_URI_MESSAGE, 
 				new String[] { BlueBeaconDBHelper.MessageEntry._ID, BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_ADDRESS, BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_DIRECTION, BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_MESSAGE, BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_TIME }, 
 				BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_ADDRESS+"=?", 
 				new String[] { remoteAddress }, 
