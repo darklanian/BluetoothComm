@@ -27,7 +27,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-public class BeaconListFragment extends ListFragment {
+public class ScannedBeaconListFragment extends ListFragment {
 	static final String TAG = "BlueBeacon";
 	
 	Vector<BluetoothDevice> foundDevices = new Vector<BluetoothDevice>();
@@ -46,6 +46,7 @@ public class BeaconListFragment extends ListFragment {
 		public void onReceive(Context context, Intent intent) {
 			if (intent.getAction().equals(BluetoothAdapter.ACTION_DISCOVERY_STARTED)) {
 				Log.d(TAG, BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+				foundDevices.clear();
 			} else if (intent.getAction().equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)) {
 				Log.d(TAG, BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
 				fetchUuids();

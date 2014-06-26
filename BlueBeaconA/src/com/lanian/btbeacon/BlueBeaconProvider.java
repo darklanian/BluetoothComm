@@ -70,6 +70,8 @@ public class BlueBeaconProvider extends ContentProvider {
 	@Override
 	public int delete(Uri uri, String selection, String[] selectionArgs) {
 		int rows = dbHelper.getWritableDatabase().delete(getTableName(uri), selection, selectionArgs);
+		if (rows > 0)
+			getContext().getContentResolver().notifyChange(uri, null);
 		return rows;
 	}
 
@@ -77,6 +79,8 @@ public class BlueBeaconProvider extends ContentProvider {
 	public int update(Uri uri, ContentValues values, String selection,
 			String[] selectionArgs) {
 		int rows = dbHelper.getWritableDatabase().update(getTableName(uri), values, selection, selectionArgs);
+		if (rows > 0)
+			getContext().getContentResolver().notifyChange(uri, null);
 		return rows;
 	}
 

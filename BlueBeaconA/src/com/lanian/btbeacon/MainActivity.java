@@ -16,7 +16,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-public class MainActivity extends Activity implements BeaconListFragment.OnBeaconClickListener, BeaconServiceManager {
+public class MainActivity extends Activity implements ScannedBeaconListFragment.OnBeaconClickListener, BeaconServiceManager {
 	static final String TAG = "BlueBeacon";
 	
 	public static final int MSG_HELLO = 1;
@@ -50,7 +50,7 @@ public class MainActivity extends Activity implements BeaconListFragment.OnBeaco
 
 		if (savedInstanceState == null) {
 			getFragmentManager().beginTransaction()
-					.add(R.id.container, new BeaconListFragment()).commit();
+					.add(R.id.container, new ScannedBeaconListFragment()).commit();
 		}
 	}
 	

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     <item android:id="@+id/action_alias" android:title="@string/action_alias"></item>
+    <item android:id="@+id/action_ban_beacon" android:title="@string/action_ban_beacon"></item>
+    <item android:id="@+id/action_forget_beacon" android:title="@string/action_forget_beacon"></item>
     
 
 </menu>

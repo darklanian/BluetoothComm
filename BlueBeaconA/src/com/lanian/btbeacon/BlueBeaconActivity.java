@@ -28,7 +28,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 public class BlueBeaconActivity extends Activity implements
-		ActionBar.TabListener, BeaconServiceManager {
+		ActionBar.TabListener, BeaconServiceManager, OnBeaconSelectedListener {
 
 	static final String TAG = "BlueBeacon";
 	
@@ -40,6 +40,7 @@ public class BlueBeaconActivity extends Activity implements
 	static final int TAB_CONVERSATION = 1;
 	static final int TAB_SCAN = 2;
 	static final int TAB_BANNED = 3;
+	static final int TAB_MESSAGE = 4;
 	
 	static class SimpleHandler extends Handler {
 		WeakReference<BlueBeaconActivity> target;
@@ -239,7 +240,9 @@ ServiceConnection serviceConnection = new ServiceConnection() {
 			case TAB_STORED:
 				return new StoredBeaconListFragment();
 			case TAB_SCAN:
-				return new BeaconListFragment();
+				return new ScannedBeaconListFragment();
+			case TAB_BANNED:
+				return StoredBeaconListFragment.newInstance(true);
 			}
 			return PlaceholderFragment.newInstance(position + 1);
 		}
@@ -293,6 +296,11 @@ ServiceConnection serviceConnection = new ServiceConnection() {
 					ARG_SECTION_NUMBER)));
 			return rootView;
 		}
+	}
+
+	@Override
+	public void onBeaconSelected(String address) {
+		mViewPager.setCurrentItem(TAB_MESSAGE);
 	}
 
 }

@@ -10,18 +10,23 @@
     <string name="title_activity_chat">ChatActivity</string>
     <string name="button_send">Send</string>
     <string name="action_request_discoverable">Request discoverable</string>
-    <string name="title_activity_blue_beacon">BlueBeaconActivity</string>
-    <string name="title_section1">Section 1</string>
-    <string name="title_section2">Section 2</string>
-    <string name="title_section3">Section 3</string>
+
     <string-array name="tab_titles">
-        <item >stored</item>
-        <item >conversations</item>
-        <item >scan</item>
-        <item >banned</item>
+        <item>stored</item>
+        <item>conversations</item>
+        <item>scan</item>
+        <item>banned</item>
+        <item >Message</item>
     </string-array>
-        <string name="action_store_beacon">Store</string>
-        <string name="toast_error_could_not_store_beacon">Could not store beacon</string>
-        <string name="action_alias">Alias</string>
+
+    <string name="action_store_beacon">Store</string>
+    <string name="toast_error_could_not_store_beacon">Could not store beacon</string>
+    <string name="action_alias">Alias</string>
+    <string name="alias">Alias</string>
+    <string name="button_ok">OK</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="action_ban_beacon">Ban</string>
+    <string name="action_forget_beacon">Forget</string>
+    <string name="action_unban_beacon">Unban</string>
 
 </resources>
