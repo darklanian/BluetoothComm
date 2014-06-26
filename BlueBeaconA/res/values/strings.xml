@@ -22,5 +22,6 @@
     </string-array>
         <string name="action_store_beacon">Store</string>
         <string name="toast_error_could_not_store_beacon">Could not store beacon</string>
+        <string name="action_alias">Alias</string>
 
 </resources>

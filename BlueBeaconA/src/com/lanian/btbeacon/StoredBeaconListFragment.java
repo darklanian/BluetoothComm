@@ -6,6 +6,8 @@ import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.widget.ArrayAdapter;
 
 public class StoredBeaconListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -20,6 +22,8 @@ public class StoredBeaconListFragment extends ListFragment implements LoaderMana
 		adapter = new ArrayAdapter<Beacon>(getActivity(), android.R.layout.simple_list_item_1);
 		setListAdapter(adapter);
 		loadStoredBeacons();
+		
+		setHasOptionsMenu(true);
 	}
 	
 	private void loadStoredBeacons() {
@@ -52,5 +56,12 @@ public class StoredBeaconListFragment extends ListFragment implements LoaderMana
 		// TODO Auto-generated method stub
 		adapter.clear();
 		adapter.notifyDataSetChanged();
+	}
+	
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		// TODO Auto-generated method stub
+		super.onCreateOptionsMenu(menu, inflater);
+		inflater.inflate(R.menu.stored_beacons, menu);
 	}
 }

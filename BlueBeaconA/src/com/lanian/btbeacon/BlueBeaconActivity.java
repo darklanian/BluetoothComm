@@ -2,8 +2,6 @@ package com.lanian.btbeacon;
 
 import java.lang.ref.WeakReference;
 
-import com.lanian.btbeacon.MainActivity.SimpleHandler;
-
 import android.app.Activity;
 import android.app.ActionBar;
 import android.app.Fragment;
