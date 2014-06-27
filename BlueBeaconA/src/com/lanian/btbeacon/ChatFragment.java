@@ -188,19 +188,28 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor>, S
 	public void onResume() {
 		// TODO Auto-generated method stub
 		super.onResume();
+		remoteAddress = getActivity().getIntent().getStringExtra(ChatActivity.EXTRA_ADDRESS);
 		reload();
-		
+		beaconService.beholdBeacon(remoteAddress);
+	}
+	
+	
+	@Override
+	public void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+		beaconService.beholdBeacon(null);
 	}
 	
 	@Override
 	public void onServiceConnected(ComponentName name, IBinder service) {
-		beaconService.notifyChatActivityState(true);
+		beaconService.beholdBeacon(remoteAddress);
 	}
 
 	@Override
 	public void onServiceDisconnected(ComponentName name) {
 		// TODO Auto-generated method stub
-		beaconService.notifyChatActivityState(false);
+		beaconService.beholdBeacon(null);
 	}
 	
 	

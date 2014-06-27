@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <SwitchPreference android:switchTextOn="@string/pref_service_on" android:key="pref_switch_service" android:switchTextOff="@string/pref_service_off" android:title="@string/pref_title_switch_service" android:defaultValue="true"/>
+    
+
+</PreferenceScreen>

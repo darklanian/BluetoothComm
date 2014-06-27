@@ -34,8 +34,8 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 	public static final int MSG_SEND_MESSAGE = 2;
 	public static final String MSG_DATA_ADDRESS = "address";
 	public static final String MSG_DATA_MESSAGE = "message";
-	public static final int MSG_NOTIFY_CHAT_ACTIVITY_STATE = 3;
-	public static final String MSG_DATA_CHAT_ACTIVITY_STATE = "chat_activity_state";
+	public static final int MSG_BEHOLD_ADDRESS = 3;
+	public static final String MSG_DATA_BEHOLD_ADDRESS = "behold_address";
 	
 	Vector<String> bannedAddress = new Vector<String>();
 	ContentObserver observer = new ContentObserver(new Handler()) {
@@ -46,7 +46,7 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 	BluetoothServerSocket serverSocket;
 	Vector<BeaconConnection> connections = new Vector<BeaconConnection>();
 	Messenger boundMessenger;
-	boolean chatActivityOn = false;
+	String beholdingAddress;
 	
 	static class SimpleHandler extends Handler {
 		WeakReference<BeaconService> target;
@@ -99,8 +99,9 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 			if (!sendMessageTo(msg.getData()))
 				Log.d(SERVICE_NAME, "sendMessageTo() failed");
 			return true;
-		case MSG_NOTIFY_CHAT_ACTIVITY_STATE:
-			chatActivityOn = msg.getData().getBoolean(MSG_DATA_CHAT_ACTIVITY_STATE);
+		case MSG_BEHOLD_ADDRESS:
+			beholdingAddress = msg.getData().getString(MSG_DATA_BEHOLD_ADDRESS);
+			Log.d(SERVICE_NAME, "beholdingAddress: "+beholdingAddress);
 			return true;
 		}
 		return false;
@@ -259,7 +260,7 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 
 	@Override
 	public void onReceiveMessage(BeaconConnection conn, String message) {
-		if (!chatActivityOn)
+		if (beholdingAddress == null || !beholdingAddress.equals(conn.getRemoteAddress()))
 			showMessageNotification(conn.getRemoteAddress(), message);
 	}
 	
@@ -270,7 +271,7 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 			.setSmallIcon(R.drawable.ic_launcher)
 			.setContentText(getString(R.string.app_name))
 			.setContentText(message)
-			.setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, ChatActivity.class).putExtra(ChatActivity.EXTRA_ADDRESS, remoteAddress), PendingIntent.FLAG_UPDATE_CURRENT))
+			.setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, ChatActivity.class).putExtra(ChatActivity.EXTRA_ADDRESS, remoteAddress).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), PendingIntent.FLAG_UPDATE_CURRENT))
 			.setAutoCancel(true).setVibrate(new long[] {0, 500})
 			.build());
 	}

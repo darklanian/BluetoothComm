@@ -108,14 +108,14 @@ public class BeaconServiceProxy {
 			context.unbindService(serviceConnection);
 	}
 	
-	public void notifyChatActivityState(boolean on) {
+	public void beholdBeacon(String address) {
 		if (serviceMessenger == null) {
 			Log.e(TAG, "serviceMessenger is null");
 			return;
 		}
 		Bundle data = new Bundle();
-		data.putBoolean(BeaconService.MSG_DATA_CHAT_ACTIVITY_STATE, on);
-		Message msg = Message.obtain(null, BeaconService.MSG_NOTIFY_CHAT_ACTIVITY_STATE);
+		data.putString(BeaconService.MSG_DATA_BEHOLD_ADDRESS, address);
+		Message msg = Message.obtain(null, BeaconService.MSG_BEHOLD_ADDRESS);
 		msg.setData(data);
 		try {
 			serviceMessenger.send(msg);

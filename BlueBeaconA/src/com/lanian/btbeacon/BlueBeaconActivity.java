@@ -117,6 +117,8 @@ public class BlueBeaconActivity extends Activity implements
 		if (id == R.id.action_request_discoverable) {
 			startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE));
 			return true;
+		} else if (id == R.id.action_settings) {
+			startActivity(new Intent(this, SettingsActivity.class));
 		}
 		return super.onOptionsItemSelected(item);
 	}

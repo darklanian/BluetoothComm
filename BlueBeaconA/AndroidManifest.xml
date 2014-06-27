@@ -10,6 +10,7 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -37,13 +38,20 @@
 
         <activity
             android:name="com.lanian.btbeacon.ChatActivity"
-            android:label="@string/app_name" android:launchMode="singleTask">
+            android:label="@string/app_name"
+            android:launchMode="singleTop" >
         </activity>
-        <receiver android:name="BluethoothReceiver">
+
+        <receiver android:name="com.lanian.btbeacon.BluethoothReceiver" >
             <intent-filter>
-                <action android:name="android.bluetooth.adapter.action.STATE_CHANGED"/>
+                <action android:name="android.bluetooth.adapter.action.STATE_CHANGED" />
             </intent-filter>
         </receiver>
+
+        <activity
+            android:name="com.lanian.btbeacon.SettingsActivity"
+            android:label="@string/title_activity_settings" >
+        </activity>
     </application>
 
 </manifest>

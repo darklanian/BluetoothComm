@@ -4,14 +4,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.text.format.Time;
 import android.util.Log;
