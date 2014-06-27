@@ -39,6 +39,11 @@
             android:name="com.lanian.btbeacon.ChatActivity"
             android:label="@string/title_activity_chat" android:launchMode="singleTask">
         </activity>
+        <receiver android:name="BluethoothReceiver">
+            <intent-filter>
+                <action android:name="android.bluetooth.adapter.action.STATE_CHANGED"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

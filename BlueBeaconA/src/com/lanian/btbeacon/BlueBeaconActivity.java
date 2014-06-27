@@ -96,6 +96,8 @@ public class BlueBeaconActivity extends Activity implements
 					.setText(mSectionsPagerAdapter.getPageTitle(i))
 					.setTabListener(this));
 		}
+		
+		startService(new Intent(this, BeaconService.class));
 	}
 
 	@Override
