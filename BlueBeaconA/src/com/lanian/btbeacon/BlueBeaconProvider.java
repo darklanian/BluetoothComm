@@ -4,20 +4,24 @@ import java.util.List;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.util.Log;
+import android.widget.Toast;
 
 public class BlueBeaconProvider extends ContentProvider {
 
-	final String TAG = "BlueBeacon";
+	static final String TAG = "BlueBeacon";
 	
 	public static final String AUTHORITY = "BlueBeaconProviderAuthorities";
 	public static final Uri CONTENT_URI = Uri.parse("content://"+AUTHORITY);
 	static final String PATH_MESSAGE = BlueBeaconDBHelper.MessageEntry.TABLE_NAME;
-	static final String PATH_ADDRESS = "address";
+	static final String PATH_CONVERSATION = "conversation";
 	static final String PATH_BEACON = BlueBeaconDBHelper.BeaconEntry.TABLE_NAME;
 	public static final Uri CONTENT_URI_MESSAGE = Uri.withAppendedPath(CONTENT_URI, PATH_MESSAGE);
-	public static final Uri CONTENT_URI_ADDRESS = Uri.withAppendedPath(CONTENT_URI, PATH_ADDRESS);
+	public static final Uri CONTENT_URI_CONVERSATION = Uri.withAppendedPath(CONTENT_URI, PATH_CONVERSATION);
 	public static final Uri CONTENT_URI_BEACON = Uri.withAppendedPath(CONTENT_URI, PATH_BEACON);
 	
 	BlueBeaconDBHelper dbHelper;
@@ -34,9 +38,8 @@ public class BlueBeaconProvider extends ContentProvider {
 		
 		String tableName = getTableName(uri);
 		
-		if (tableName.equals(PATH_ADDRESS)) {
-			return dbHelper.getReadableDatabase().query(true, BlueBeaconDBHelper.MessageEntry.TABLE_NAME, 
-					new String[] {BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_ADDRESS}, null, null, null, null, null, null);
+		if (tableName.equals(PATH_CONVERSATION)) {
+			return dbHelper.queryConversation(dbHelper.getReadableDatabase());
 		} else {
 			return dbHelper.getReadableDatabase().query(tableName, projection, selection, selectionArgs, null, null, sortOrder);
 		}
@@ -84,4 +87,30 @@ public class BlueBeaconProvider extends ContentProvider {
 		return rows;
 	}
 
+	public static void storeBeacon(Context context, String address) {
+		new AsyncTask<String, Integer, Uri>() {
+
+			Context context;
+			public AsyncTask<String, Integer, Uri> setContext(Context c) { this.context = c; return this; }
+			
+			@Override
+			protected Uri doInBackground(String... params) {
+				ContentValues values = new ContentValues();
+				values.put(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ADDRESS, params[0]);
+				values.put(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ALIAS, "");
+				values.put(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_BANNED, 0);
+				
+				return context.getContentResolver().insert(BlueBeaconProvider.CONTENT_URI_BEACON, values);
+			}
+			
+			protected void onPostExecute(Uri result) {
+				if (result == null) {
+					Toast.makeText(context, R.string.toast_error_could_not_store_beacon, Toast.LENGTH_SHORT).show();
+				} else {
+					Log.d(TAG, "beacon is stored: "+result.toString());
+				}
+			}
+			
+		}.setContext(context).execute(address);
+	}
 }

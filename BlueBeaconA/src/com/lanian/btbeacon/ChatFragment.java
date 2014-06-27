@@ -9,8 +9,12 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -22,18 +26,43 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
-
-	public static ChatFragment newInstance(String address, BeaconServiceManager serviceManager) {
+	static final String TAG = "BlueBeacon";
+	
+	public static ChatFragment newInstance(String address) {
+		Log.d(TAG, "ChatFragment.newInstance() "+address);
 		ChatFragment fragment = new ChatFragment();
 		fragment.remoteAddress = address;
-		fragment.beaconService = serviceManager;
 		return fragment;
 	}
 	
 	String remoteAddress;
-	BeaconServiceManager beaconService;
 	SimpleCursorAdapter messageAdapter;
-	ContentObserver observer;
+	ContentObserver observer = new ContentObserver(new Handler()) {
+		@Override
+		public void onChange(boolean selfChange) {
+			// TODO Auto-generated method stub
+			super.onChange(selfChange);
+			reload();
+		}
+	};
+	BeaconServiceManager beaconService = new BeaconServiceManager();
+	
+	@Override
+	public void onStart() {
+		// TODO Auto-generated method stub
+		super.onStart();
+		beaconService.bind(getActivity());
+		getActivity().getContentResolver().registerContentObserver(BlueBeaconProvider.CONTENT_URI_MESSAGE, false, observer);
+	}
+	
+	@Override
+	public void onStop() {
+		// TODO Auto-generated method stub
+		super.onStop();
+		beaconService.unbind(getActivity());
+		getActivity().getContentResolver().unregisterContentObserver(observer);
+	}
+	
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -82,40 +111,16 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 		listView.setDivider(null);
 		listView.setAdapter(messageAdapter);
 		
-		
-		observer = new ContentObserver(new Handler()) {
-			@Override
-			public void onChange(boolean selfChange) {
-				// TODO Auto-generated method stub
-				super.onChange(selfChange);
-				reload();
-			}
-		};
-		
-		getActivity().getContentResolver().registerContentObserver(BlueBeaconProvider.CONTENT_URI_MESSAGE, false, observer);
+		reload();
 		
 		return rootView;
 	}
 	
-	@Override
-	public void onDestroy() {
-		// TODO Auto-generated method stub
-		super.onDestroy();
-		
-		getActivity().getContentResolver().unregisterContentObserver(observer);
-	}
 	
-	@Override
-	public void onResume() {
-		super.onResume();
-		
-		reload();
-		
-		
-	}
 
 	private void reload() {
-		getLoaderManager().restartLoader(0, null, this);
+		if (remoteAddress != null && !remoteAddress.isEmpty())
+			getLoaderManager().restartLoader(0, null, this);
 	}
 		
 	protected boolean sendMessage() {
@@ -148,7 +153,38 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 		messageAdapter.swapCursor(null);
 	}
 
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onActivityCreated(savedInstanceState);
+		
+		setHasOptionsMenu(true);
+	}
 	
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		// TODO Auto-generated method stub
+		super.onCreateOptionsMenu(menu, inflater);
+		inflater.inflate(R.menu.chat, menu);
+	}
 	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.action_store_beacon:
+			if (remoteAddress != null || !remoteAddress.isEmpty())
+				BlueBeaconProvider.storeBeacon(getActivity(), remoteAddress);
+			break;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+		return true;
+	}
 	
+	@Override
+	public void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		reload();
+	}
 }

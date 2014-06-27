@@ -1,6 +1,7 @@
 package com.lanian.btbeacon;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
@@ -64,4 +65,13 @@ public class BlueBeaconDBHelper extends SQLiteOpenHelper {
 
 	}
 
+	public Cursor queryConversation(SQLiteDatabase db) {
+		String sql = "SELECT DISTINCT "+
+				MessageEntry.TABLE_NAME+"."+MessageEntry.COLUMN_NAME_ADDRESS+","+BeaconEntry.TABLE_NAME+"."+BeaconEntry.COLUMN_NAME_ALIAS+
+				" FROM "+MessageEntry.TABLE_NAME+
+				" LEFT JOIN "+BeaconEntry.TABLE_NAME+
+				" ON "+MessageEntry.TABLE_NAME+"."+MessageEntry.COLUMN_NAME_ADDRESS+"="+BeaconEntry.TABLE_NAME+"."+BeaconEntry.COLUMN_NAME_ADDRESS+
+				" WHERE "+BeaconEntry.TABLE_NAME+"."+BeaconEntry.COLUMN_NAME_BANNED+"=0";
+		return db.rawQuery(sql, null);
+	}
 }

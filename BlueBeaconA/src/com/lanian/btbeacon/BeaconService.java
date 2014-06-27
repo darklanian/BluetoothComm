@@ -73,7 +73,7 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 			this.replyTo = msg.replyTo;
 			if (this.replyTo != null) {
 				try {
-					this.replyTo.send(Message.obtain(null, MainActivity.MSG_HELLO));
+					this.replyTo.send(Message.obtain(null, BeaconServiceManager.MSG_HELLO));
 				} catch (RemoteException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -81,7 +81,8 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 			}
 			return true;
 		case MSG_SEND_MESSAGE:
-			sendMessageTo(msg.getData());
+			if (!sendMessageTo(msg.getData()))
+				Log.d(SERVICE_NAME, "sendMessageTo() failed");
 			return true;
 		}
 		return false;
@@ -90,20 +91,28 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 	private boolean sendMessageTo(Bundle data) {
 		String address = data.getString(MSG_DATA_ADDRESS);
 		String message = data.getString(MSG_DATA_MESSAGE);
+		Log.d(SERVICE_NAME, String.format("BeaconService.sendMessageTo %s %s", address, message));
+		
+		if (address == null || address.isEmpty())
+			return false;
 		
 		BeaconConnection connection = null;
 		for (BeaconConnection conn : connections) {
 			if (conn.dev.getAddress().equals(address)) {
 				connection = conn;
+				Log.d(SERVICE_NAME, "found existing connection");
 				break;
 			}
 		}
+		
 		if (connection == null) {
 			connection = connect(address);
 		}
 		
-		if (connection == null)
+		if (connection == null) {
+			Log.d(SERVICE_NAME, "failed to connect");
 			return false;
+		}
 		
 		return connection.sendMessage(message);
 	}
@@ -118,7 +127,7 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 				BluetoothSocket clientSocket = serverSocket.accept();
 				Log.d(SERVICE_NAME, "A client is connected: "+clientSocket.getRemoteDevice().getAddress());
 				connections.add(new BeaconConnection(this, clientSocket, clientSocket.getRemoteDevice(), this));
-				showChatView(clientSocket.getRemoteDevice().getAddress());
+				startChatActivity(clientSocket.getRemoteDevice().getAddress());
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -181,7 +190,7 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 		}
 		
 		int tryCount = 0;
-		while (tryCount < 5) {
+		while (tryCount < 10) {
 			try {
 				socket.connect();
 				BeaconConnection conn = new BeaconConnection(this, socket, dev, this);
@@ -199,18 +208,8 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 		return connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address));
 	}
 	
-	private void showChatView(String remoteAddress) {
-		if (replyTo == null)
-			return;
-		Bundle data = new Bundle();
-		data.putString(MainActivity.MSG_DATA_ADDRESS, remoteAddress);
-		Message msg = Message.obtain(null, MainActivity.MSG_SHOW_CHAT_VIEW);
-		msg.setData(data);
-		try {
-			replyTo.send(msg);
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	private void startChatActivity(String remoteAddress) {
+		startActivity(new Intent(this, ChatActivity.class).putExtra(ChatActivity.EXTRA_ADDRESS, remoteAddress)
+				.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
 	}
 }

@@ -66,7 +66,7 @@ public class BeaconConnection implements Runnable {
 		Time time = new Time();
 		time.setToNow();
 		values.put(BlueBeaconDBHelper.MessageEntry.COLUMN_NAME_TIME, time.format("%Y-%m-%dT%H:%M:%S"));
-		Uri uri = context.getContentResolver().insert(BlueBeaconProvider.CONTENT_URI, values);
+		Uri uri = context.getContentResolver().insert(BlueBeaconProvider.CONTENT_URI_MESSAGE, values);
 		if (uri == null)
 			Log.e(TAG, "couldn't insert message to DB");
 	}

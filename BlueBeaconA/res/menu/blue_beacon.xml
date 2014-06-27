@@ -3,9 +3,9 @@
     tools:context="com.lanian.btbeacon.BlueBeaconActivity" >
 
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/action_request_discoverable"
         android:orderInCategory="100"
         android:showAsAction="never"
-        android:title="@string/action_settings"/>
+        android:title="@string/action_request_discoverable"/>
 
 </menu>

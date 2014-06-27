@@ -2,35 +2,37 @@ package com.lanian.btbeacon;
 
 public class Beacon {
 	private String address;
-	private String name;
+	private String alias;
 	
 	public Beacon(String address) {
 		this.address = address;
 	}
 	
-	public Beacon(String address, String name) {
+	public Beacon(String address, String alias) {
 		this(address);
-		setName(name);
+		setAlias(alias);
 	}
 	
-	public String getName() {
-		if (name == null || name.isEmpty()) {
+	public String getDisplayName() {
+		if (alias == null || alias.isEmpty()) {
 			return address;
 		}
 
-		return name;
+		return alias;
 	}
 	
-	public void setName(String name) {
-		this.name = name;
+	public void setAlias(String alias) {
+		this.alias = alias;
 	}
+	
+	public String getAlias() { return alias; }
 	
 	public String getAddress() { return address; }
 	
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		return getName();
+		return getDisplayName();
 	}
 
 }

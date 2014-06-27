@@ -17,19 +17,6 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.lanian.btbeacon.MainActivity"
-            android:label="@string/app_name" >
-        </activity>
-
-        <service android:name="com.lanian.btbeacon.BeaconService" >
-        </service>
-
-        <provider
-            android:name="com.lanian.btbeacon.BlueBeaconProvider"
-            android:authorities="BlueBeaconProviderAuthorities" android:exported="false">
-        </provider>
-
-        <activity
             android:name="com.lanian.btbeacon.BlueBeaconActivity"
             android:label="@string/app_name" >
             <intent-filter>
@@ -38,7 +25,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
+
+        <service android:name="com.lanian.btbeacon.BeaconService" >
+        </service>
+
+        <provider
+            android:name="com.lanian.btbeacon.BlueBeaconProvider"
+            android:authorities="BlueBeaconProviderAuthorities"
+            android:exported="false" >
+        </provider>
+
+        <activity
+            android:name="com.lanian.btbeacon.ChatActivity"
+            android:label="@string/title_activity_chat" android:launchMode="singleTask">
+        </activity>
     </application>
 
 </manifest>

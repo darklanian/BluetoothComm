@@ -1,23 +1,14 @@
 package com.lanian.btbeacon;
 
-import java.lang.ref.WeakReference;
-
 import android.app.Activity;
 import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.content.ComponentName;
-import android.content.Context;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Message;
-import android.os.Messenger;
-import android.os.RemoteException;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,109 +19,31 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 public class BlueBeaconActivity extends Activity implements
-		ActionBar.TabListener, BeaconServiceManager, OnBeaconSelectedListener {
+		ActionBar.TabListener, OnBeaconSelectedListener {
 
 	static final String TAG = "BlueBeacon";
-	
-	public static final int MSG_HELLO = 1;
-	public static final int MSG_SHOW_CHAT_VIEW = 2;
-	public static final String MSG_DATA_ADDRESS = "address";
 	
 	static final int TAB_STORED = 0;
 	static final int TAB_CONVERSATION = 1;
 	static final int TAB_SCAN = 2;
 	static final int TAB_BANNED = 3;
-	static final int TAB_MESSAGE = 4;
 	
-	static class SimpleHandler extends Handler {
-		WeakReference<BlueBeaconActivity> target;
-		
-		public SimpleHandler(BlueBeaconActivity activity) {
-			target = new WeakReference<BlueBeaconActivity>(activity);
-		}
-		@Override
-		public void handleMessage(Message msg) {
-			boolean msgHandled = false;
-			BlueBeaconActivity activity = target.get();
-			if (activity != null)
-				msgHandled = activity.handleMessage(msg);
-			if (!msgHandled)
-				super.handleMessage(msg);
-		}
-	}
+	BeaconServiceManager beaconService = new BeaconServiceManager();
 	
-	Messenger beaconService;
-	Messenger handler = new Messenger(new SimpleHandler(this));
-	
-	public boolean handleMessage(Message msg) {
-		switch (msg.what) {
-		case MSG_HELLO:
-			Log.d(TAG, "OK");
-			break;
-		case MSG_SHOW_CHAT_VIEW:
-			currentOpponent = msg.getData().getString(MSG_DATA_ADDRESS);
-			mViewPager.setCurrentItem(TAB_MESSAGE);
-			break;
-		default:
-			return false;
-		}
-		return true;
-	}
-	
-	ServiceConnection serviceConnection = new ServiceConnection() {
-		
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			beaconService = null;
-		}
-		
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			beaconService = new Messenger(service);
-			try {
-				Message message = Message.obtain(null, BeaconService.MSG_HELLO);
-				message.replyTo = handler;
-				beaconService.send(message);
-			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	};
-	
-	String currentOpponent;
-
 	@Override
 	protected void onStart() {
 		super.onStart();
 		
-		bindService(new Intent(this, BeaconService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+		beaconService.bind(this);
 	}
 	
 	@Override
 	protected void onStop() {
 		super.onStop();
 		
-		if (beaconService != null)
-			unbindService(serviceConnection);
+		beaconService.unbind(this);
 	}
 	
-	public boolean sendMessageTo(String address, String message) {
-		Bundle data = new Bundle();
-		data.putString(BeaconService.MSG_DATA_ADDRESS, address);
-		data.putString(BeaconService.MSG_DATA_MESSAGE, message);
-		
-		Message msg = Message.obtain(null, BeaconService.MSG_SEND_MESSAGE);
-		msg.setData(data);
-		
-		try {
-			beaconService.send(msg);
-			return true;
-		} catch (RemoteException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide
 	 * fragments for each of the sections. We use a {@link FragmentPagerAdapter}
@@ -199,7 +112,8 @@ public class BlueBeaconActivity extends Activity implements
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
-		if (id == R.id.action_settings) {
+		if (id == R.id.action_request_discoverable) {
+			startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE));
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -242,12 +156,12 @@ public class BlueBeaconActivity extends Activity implements
 			switch (position) {
 			case TAB_STORED:
 				return new StoredBeaconListFragment();
+			case TAB_CONVERSATION:
+				return new ConversationListFragment();
 			case TAB_SCAN:
 				return new ScannedBeaconListFragment();
 			case TAB_BANNED:
 				return StoredBeaconListFragment.newInstance(true);
-			case TAB_MESSAGE:
-				return ChatFragment.newInstance(currentOpponent, BlueBeaconActivity.this);
 			}
 			return PlaceholderFragment.newInstance(position + 1);
 		}
@@ -305,8 +219,11 @@ public class BlueBeaconActivity extends Activity implements
 
 	@Override
 	public void onBeaconSelected(String address) {
-		currentOpponent = address;
-		mViewPager.setCurrentItem(TAB_MESSAGE);
+		if (address == null)
+			return;
+		Log.d(TAG, "onBeaconSelected "+address);
+		
+		startActivity(new Intent(this, ChatActivity.class).putExtra(ChatActivity.EXTRA_ADDRESS, address));
 	}
 
 }

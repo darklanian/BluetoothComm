@@ -135,9 +135,6 @@ public class ScannedBeaconListFragment extends ListFragment {
 		case R.id.action_scan:
 			startScan();		
 			break;
-		case R.id.action_request_discoverable:
-			startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE));
-			break;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -156,7 +153,7 @@ public class ScannedBeaconListFragment extends ListFragment {
 	
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
-		//super.onListItemClick(l, v, position, id);
+		super.onListItemClick(l, v, position, id);
 		if (listener != null) {
 			listener.onBeaconClick(adapter.getItem(position));
 		}
@@ -219,7 +216,7 @@ public class ScannedBeaconListFragment extends ListFragment {
 			ContextMenuInfo menuInfo) {
 		// TODO Auto-generated method stub
 		super.onCreateContextMenu(menu, v, menuInfo);
-		getActivity().getMenuInflater().inflate(R.menu.scanned_beacons, menu);
+		getActivity().getMenuInflater().inflate(R.menu.context_scanned_beacons, menu);
 	}
 	
 	@Override
@@ -227,7 +224,7 @@ public class ScannedBeaconListFragment extends ListFragment {
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
 		switch (item.getItemId()) {
 		case R.id.action_store_beacon:
-			storeBeacon(adapter.getItem(info.position).getAddress());
+			BlueBeaconProvider.storeBeacon(getActivity(), adapter.getItem(info.position).getAddress());
 			break;
 		default:
 			return super.onContextItemSelected(item);
@@ -236,24 +233,4 @@ public class ScannedBeaconListFragment extends ListFragment {
 		return true;
 	}
 	
-	private void storeBeacon(String address) {
-		new AsyncTask<String, Integer, Boolean>() {
-
-			@Override
-			protected Boolean doInBackground(String... params) {
-				ContentValues values = new ContentValues();
-				values.put(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ADDRESS, params[0]);
-				values.put(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ALIAS, "");
-				values.put(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_BANNED, 0);
-				return (null != getActivity().getContentResolver().insert(BlueBeaconProvider.CONTENT_URI_BEACON, values));
-			}
-			
-			protected void onPostExecute(Boolean result) {
-				if (!result) {
-					Toast.makeText(getActivity(), R.string.toast_error_could_not_store_beacon, Toast.LENGTH_SHORT).show();
-				}
-			}
-			
-		}.execute(address);
-	}
 }

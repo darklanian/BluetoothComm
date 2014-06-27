@@ -35,10 +35,12 @@ public class StoredBeaconListFragment extends ListFragment implements LoaderMana
 		public void onChange(boolean selfChange) {
 			// TODO Auto-generated method stub
 			super.onChange(selfChange);
-			
+			Log.d(TAG, "Beacon list changed");
 			loadStoredBeacons();
 		}
 	};
+	boolean observerRegistered = false;
+	
 	OnBeaconSelectedListener listener;
 	
 	@Override
@@ -66,15 +68,30 @@ public class StoredBeaconListFragment extends ListFragment implements LoaderMana
 	}
 	
 	@Override
-	public void onResume() {
-		super.onResume();
+	public void onStart() {
+		super.onStart();
+		registerContentObserver();
+	}
+	
+	private void registerContentObserver() {
 		getActivity().getContentResolver().registerContentObserver(BlueBeaconProvider.CONTENT_URI_BEACON, false, observer);
 	}
 	
-	@Override
-	public void onPause() {
-		super.onPause();
+	private void unregisterContentObserver() {
 		getActivity().getContentResolver().unregisterContentObserver(observer);
+	}
+	
+	@Override
+	public void onStop() {
+		super.onStop();
+		unregisterContentObserver();
+	}
+	
+	@Override
+	public void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		loadStoredBeacons();
 	}
 	
 	private void loadStoredBeacons() {
@@ -98,8 +115,8 @@ public class StoredBeaconListFragment extends ListFragment implements LoaderMana
 		
 		data.moveToFirst();
 		do {
-			adapter.add(new Beacon(data.getString(
-					data.getColumnIndexOrThrow(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ADDRESS)), 
+			adapter.add(new Beacon(
+					data.getString(data.getColumnIndexOrThrow(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ADDRESS)), 
 					data.getString(data.getColumnIndexOrThrow(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ALIAS))));
 			
 		} while (data.moveToNext());
@@ -117,25 +134,23 @@ public class StoredBeaconListFragment extends ListFragment implements LoaderMana
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
-		getActivity().getMenuInflater().inflate(banned?R.menu.banned_beacons:R.menu.stored_beacons, menu);
+		getActivity().getMenuInflater().inflate(banned?R.menu.context_banned_beacons:R.menu.context_stored_beacons, menu);
 	}
 	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
-		Beacon beacon = adapter.getItem(info.position);
 		switch (item.getItemId()) {
 		case R.id.action_alias:
-			askAlias(beacon.getAddress(), beacon.getName());
+			askAlias(adapter.getItem(((AdapterContextMenuInfo)item.getMenuInfo()).position).getAddress(), adapter.getItem(((AdapterContextMenuInfo)item.getMenuInfo()).position).getAlias());
 			break;
 		case R.id.action_ban_beacon:
-			ban(beacon.getAddress(), true);
+			ban(adapter.getItem(((AdapterContextMenuInfo)item.getMenuInfo()).position).getAddress(), true);
 			break;
 		case R.id.action_forget_beacon:
-			forget(beacon.getAddress());
+			forget(adapter.getItem(((AdapterContextMenuInfo)item.getMenuInfo()).position).getAddress());
 			break;
 		case R.id.action_unban_beacon:
-			ban(beacon.getAddress(), false);
+			ban(adapter.getItem(((AdapterContextMenuInfo)item.getMenuInfo()).position).getAddress(), false);
 			break;
 		default:
 			return super.onContextItemSelected(item);
