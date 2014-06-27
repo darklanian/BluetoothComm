@@ -5,11 +5,15 @@ import java.lang.ref.WeakReference;
 import java.util.UUID;
 import java.util.Vector;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -30,6 +34,8 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 	public static final int MSG_SEND_MESSAGE = 2;
 	public static final String MSG_DATA_ADDRESS = "address";
 	public static final String MSG_DATA_MESSAGE = "message";
+	public static final int MSG_NOTIFY_CHAT_ACTIVITY_STATE = 3;
+	public static final String MSG_DATA_CHAT_ACTIVITY_STATE = "chat_activity_state";
 	
 	Vector<String> bannedAddress = new Vector<String>();
 	ContentObserver observer = new ContentObserver(new Handler()) {
@@ -39,7 +45,8 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 	};
 	BluetoothServerSocket serverSocket;
 	Vector<BeaconConnection> connections = new Vector<BeaconConnection>();
-	Messenger replyTo;
+	Messenger boundMessenger;
+	boolean chatActivityOn = false;
 	
 	static class SimpleHandler extends Handler {
 		WeakReference<BeaconService> target;
@@ -71,17 +78,17 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 	@Override
 	public boolean onUnbind(Intent intent) {
 		Log.d(SERVICE_NAME, "onUnbind");
-		replyTo = null;
+		boundMessenger = null;
 		return super.onUnbind(intent);
 	}
 
 	public boolean handlerMessage(Message msg) {
 		switch (msg.what) {
 		case MSG_HELLO:
-			this.replyTo = msg.replyTo;
-			if (this.replyTo != null) {
+			this.boundMessenger = msg.replyTo;
+			if (this.boundMessenger != null) {
 				try {
-					this.replyTo.send(Message.obtain(null, BeaconServiceProxy.MSG_HELLO));
+					this.boundMessenger.send(Message.obtain(null, BeaconServiceProxy.MSG_HELLO));
 				} catch (RemoteException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -91,6 +98,9 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 		case MSG_SEND_MESSAGE:
 			if (!sendMessageTo(msg.getData()))
 				Log.d(SERVICE_NAME, "sendMessageTo() failed");
+			return true;
+		case MSG_NOTIFY_CHAT_ACTIVITY_STATE:
+			chatActivityOn = msg.getData().getBoolean(MSG_DATA_CHAT_ACTIVITY_STATE);
 			return true;
 		}
 		return false;
@@ -139,7 +149,7 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 				} else {
 					Log.d(SERVICE_NAME, "A client is connected: "+clientSocket.getRemoteDevice().getAddress());
 					connections.add(new BeaconConnection(this, clientSocket, clientSocket.getRemoteDevice(), this));
-					startChatActivity(clientSocket.getRemoteDevice().getAddress());
+					//startChatActivity(clientSocket.getRemoteDevice().getAddress());
 				}
 			}
 		} catch (IOException e) {
@@ -223,11 +233,6 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 		return connect(BluetoothAdapter.getDefaultAdapter().getRemoteDevice(address));
 	}
 	
-	private void startChatActivity(String remoteAddress) {
-		startActivity(new Intent(this, ChatActivity.class).putExtra(ChatActivity.EXTRA_ADDRESS, remoteAddress)
-				.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-	}
-	
 	private void loadBannedBeacons() {
 		Cursor cursor = BlueBeaconProvider.queryBannedBeacons(getContentResolver());
 		bannedAddress.clear();
@@ -251,4 +256,27 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 			}
 		}
 	}
+
+	@Override
+	public void onReceiveMessage(BeaconConnection conn, String message) {
+		if (!chatActivityOn)
+			showMessageNotification(conn.getRemoteAddress(), message);
+	}
+	
+	private void showMessageNotification(String remoteAddress, String message) {
+		
+		NotificationManager nm = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+		nm.notify(0, new Notification.Builder(this)
+			.setSmallIcon(R.drawable.ic_launcher)
+			.setContentText(getString(R.string.app_name))
+			.setContentText(message)
+			.setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, ChatActivity.class).putExtra(ChatActivity.EXTRA_ADDRESS, remoteAddress), PendingIntent.FLAG_UPDATE_CURRENT))
+			.setAutoCancel(true).setVibrate(new long[] {0, 500})
+			.build());
+	}
+	
+	/*private void startChatActivity(String remoteAddress) {
+		startActivity(new Intent(this, ChatActivity.class).putExtra(ChatActivity.EXTRA_ADDRESS, remoteAddress)
+				.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+	}*/
 }

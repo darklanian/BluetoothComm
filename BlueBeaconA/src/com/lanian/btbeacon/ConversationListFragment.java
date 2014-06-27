@@ -46,7 +46,6 @@ public class ConversationListFragment extends ListFragment implements LoaderMana
 		adapter = new ArrayAdapter<Beacon>(getActivity(), android.R.layout.simple_list_item_1);
 		setListAdapter(adapter);
 		
-		loadConversations();
 	}
 	
 	private void registerContentObserver() {
@@ -87,7 +86,7 @@ public class ConversationListFragment extends ListFragment implements LoaderMana
 	private void loadConversations() {
 		adapter.clear();
 		adapter.notifyDataSetChanged();
-		getLoaderManager().restartLoader(0, null, this);
+		getLoaderManager().restartLoader(2, null, this);
 	}
 
 	@Override

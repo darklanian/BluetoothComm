@@ -7,7 +7,6 @@
     <string name="action_scan">Scan</string>
     <string name="title_scanning">Scanning</string>
     <string name="message_scanning">Scanning beacons</string>
-    <string name="title_activity_chat">ChatActivity</string>
     <string name="button_send">Send</string>
     <string name="action_request_discoverable">Request discoverable</string>
 

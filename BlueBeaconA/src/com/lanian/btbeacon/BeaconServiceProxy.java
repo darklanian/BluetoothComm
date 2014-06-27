@@ -60,10 +60,13 @@ public class BeaconServiceProxy {
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
 			serviceMessenger = null;
+			if (serviceConnection2 != null)
+				serviceConnection2.onServiceDisconnected(name);
 		}
 		
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
+			Log.d(TAG, "onServiceConnected: "+name);
 			serviceMessenger = new Messenger(service);
 			try {
 				Message message = Message.obtain(null, BeaconService.MSG_HELLO);
@@ -73,8 +76,11 @@ public class BeaconServiceProxy {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			if (serviceConnection2 != null)
+				serviceConnection2.onServiceConnected(name, service);
 		}
 	};
+	ServiceConnection serviceConnection2;
 	
 	public boolean sendMessageTo(String address, String message) {
 		Bundle data = new Bundle();
@@ -100,6 +106,28 @@ public class BeaconServiceProxy {
 	public void unbind(Context context) {
 		if (serviceMessenger != null)
 			context.unbindService(serviceConnection);
+	}
+	
+	public void notifyChatActivityState(boolean on) {
+		if (serviceMessenger == null) {
+			Log.e(TAG, "serviceMessenger is null");
+			return;
+		}
+		Bundle data = new Bundle();
+		data.putBoolean(BeaconService.MSG_DATA_CHAT_ACTIVITY_STATE, on);
+		Message msg = Message.obtain(null, BeaconService.MSG_NOTIFY_CHAT_ACTIVITY_STATE);
+		msg.setData(data);
+		try {
+			serviceMessenger.send(msg);
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public BeaconServiceProxy(ServiceConnection connection) {
+		super();
+		serviceConnection2 = connection;
 	}
 }
 

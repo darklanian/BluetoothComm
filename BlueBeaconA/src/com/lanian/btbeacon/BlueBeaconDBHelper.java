@@ -71,7 +71,7 @@ public class BlueBeaconDBHelper extends SQLiteOpenHelper {
 				" FROM "+MessageEntry.TABLE_NAME+
 				" LEFT JOIN "+BeaconEntry.TABLE_NAME+
 				" ON "+MessageEntry.TABLE_NAME+"."+MessageEntry.COLUMN_NAME_ADDRESS+"="+BeaconEntry.TABLE_NAME+"."+BeaconEntry.COLUMN_NAME_ADDRESS+
-				" WHERE "+BeaconEntry.TABLE_NAME+"."+BeaconEntry.COLUMN_NAME_BANNED+"=0";
+				" WHERE "+BeaconEntry.TABLE_NAME+"."+BeaconEntry.COLUMN_NAME_BANNED+" IS NULL OR "+BeaconEntry.TABLE_NAME+"."+BeaconEntry.COLUMN_NAME_BANNED+"=0";
 		return db.rawQuery(sql, null);
 	}
 }

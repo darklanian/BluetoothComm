@@ -2,13 +2,16 @@ package com.lanian.btbeacon;
 
 import android.app.Fragment;
 import android.app.LoaderManager.LoaderCallbacks;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
+import android.content.ServiceConnection;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -25,7 +28,7 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
-public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor>, ServiceConnection {
 	static final String TAG = "BlueBeacon";
 	
 	public static ChatFragment newInstance(String address) {
@@ -45,7 +48,7 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 			reload();
 		}
 	};
-	BeaconServiceProxy beaconService = new BeaconServiceProxy();
+	BeaconServiceProxy beaconService = new BeaconServiceProxy(this);
 	
 	@Override
 	public void onStart() {
@@ -186,5 +189,19 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 		// TODO Auto-generated method stub
 		super.onResume();
 		reload();
+		
 	}
+	
+	@Override
+	public void onServiceConnected(ComponentName name, IBinder service) {
+		beaconService.notifyChatActivityState(true);
+	}
+
+	@Override
+	public void onServiceDisconnected(ComponentName name) {
+		// TODO Auto-generated method stub
+		beaconService.notifyChatActivityState(false);
+	}
+	
+	
 }

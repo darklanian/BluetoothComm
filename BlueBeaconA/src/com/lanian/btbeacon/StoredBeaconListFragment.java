@@ -97,7 +97,7 @@ public class StoredBeaconListFragment extends ListFragment implements LoaderMana
 	private void loadStoredBeacons() {
 		adapter.clear();
 		adapter.notifyDataSetChanged();
-		getLoaderManager().restartLoader(0, null, this);
+		getLoaderManager().restartLoader(banned?1:0, null, this);
 	}
 
 	@Override

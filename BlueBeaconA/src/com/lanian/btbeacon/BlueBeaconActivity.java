@@ -28,7 +28,7 @@ public class BlueBeaconActivity extends Activity implements
 	static final int TAB_SCAN = 2;
 	static final int TAB_BANNED = 3;
 	
-	BeaconServiceProxy beaconService = new BeaconServiceProxy();
+	BeaconServiceProxy beaconService = new BeaconServiceProxy(null);
 	
 	@Override
 	protected void onStart() {

@@ -4,10 +4,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.text.format.Time;
 import android.util.Log;
@@ -19,6 +23,7 @@ public class BeaconConnection implements Runnable {
 	
 	public interface BeaconConnectionListener {
 		public void onDisconnected(BeaconConnection conn);
+		public void onReceiveMessage(BeaconConnection conn, String message);
 	}
 	
 	Context context;
@@ -75,6 +80,8 @@ public class BeaconConnection implements Runnable {
 		String message = in.readUTF();
 		Log.d(TAG, "onReceiveMessage: "+message);
 		storeMessage(message, BlueBeaconDBHelper.MessageEntry.COLUMN_VALUE_DIRECTION_RECEIVE);
+		if (listener != null)
+			listener.onReceiveMessage(this, message);
 	}
 	
 	public boolean sendMessage(String message) {
@@ -103,4 +110,6 @@ public class BeaconConnection implements Runnable {
 	public String getRemoteAddress() {
 		return remoteAddress;
 	}
+	
+	
 }
