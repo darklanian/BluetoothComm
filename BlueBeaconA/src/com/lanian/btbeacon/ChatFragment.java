@@ -45,7 +45,7 @@ public class ChatFragment extends Fragment implements LoaderCallbacks<Cursor> {
 			reload();
 		}
 	};
-	BeaconServiceManager beaconService = new BeaconServiceManager();
+	BeaconServiceProxy beaconService = new BeaconServiceProxy();
 	
 	@Override
 	public void onStart() {

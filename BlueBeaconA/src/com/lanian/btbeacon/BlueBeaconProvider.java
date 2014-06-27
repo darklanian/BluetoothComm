@@ -3,6 +3,7 @@ package com.lanian.btbeacon;
 import java.util.List;
 
 import android.content.ContentProvider;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -112,5 +113,9 @@ public class BlueBeaconProvider extends ContentProvider {
 			}
 			
 		}.setContext(context).execute(address);
+	}
+	
+	public static Cursor queryBannedBeacons(ContentResolver contentResolver) {
+		return contentResolver.query(CONTENT_URI_BEACON, new String[] {BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ADDRESS}, BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_BANNED+"=1", null, null);
 	}
 }

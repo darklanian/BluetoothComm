@@ -14,7 +14,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-public class BeaconServiceManager {
+public class BeaconServiceProxy {
 	static final String TAG = "BlueBeacon";
 	
 	public static final int MSG_HELLO = 1;
@@ -22,15 +22,15 @@ public class BeaconServiceManager {
 	public static final String MSG_DATA_ADDRESS = "address";
 	
 	static class SimpleHandler extends Handler {
-		WeakReference<BeaconServiceManager> target;
+		WeakReference<BeaconServiceProxy> target;
 		
-		public SimpleHandler(BeaconServiceManager manager) {
-			target = new WeakReference<BeaconServiceManager>(manager);
+		public SimpleHandler(BeaconServiceProxy manager) {
+			target = new WeakReference<BeaconServiceProxy>(manager);
 		}
 		@Override
 		public void handleMessage(Message msg) {
 			boolean msgHandled = false;
-			BeaconServiceManager manager = target.get();
+			BeaconServiceProxy manager = target.get();
 			if (manager != null)
 				msgHandled = manager.handleMessage(msg);
 			if (!msgHandled)

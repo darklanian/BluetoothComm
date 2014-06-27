@@ -11,6 +11,8 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.database.ContentObserver;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -29,6 +31,12 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 	public static final String MSG_DATA_ADDRESS = "address";
 	public static final String MSG_DATA_MESSAGE = "message";
 	
+	Vector<String> bannedAddress = new Vector<String>();
+	ContentObserver observer = new ContentObserver(new Handler()) {
+		public void onChange(boolean selfChange) {
+			loadBannedBeacons();
+		}
+	};
 	BluetoothServerSocket serverSocket;
 	Vector<BeaconConnection> connections = new Vector<BeaconConnection>();
 	Messenger replyTo;
@@ -73,7 +81,7 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 			this.replyTo = msg.replyTo;
 			if (this.replyTo != null) {
 				try {
-					this.replyTo.send(Message.obtain(null, BeaconServiceManager.MSG_HELLO));
+					this.replyTo.send(Message.obtain(null, BeaconServiceProxy.MSG_HELLO));
 				} catch (RemoteException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -125,9 +133,14 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 			while (true) {
 				Log.d(SERVICE_NAME, "BlueBeacon is waiting for a client");
 				BluetoothSocket clientSocket = serverSocket.accept();
-				Log.d(SERVICE_NAME, "A client is connected: "+clientSocket.getRemoteDevice().getAddress());
-				connections.add(new BeaconConnection(this, clientSocket, clientSocket.getRemoteDevice(), this));
-				startChatActivity(clientSocket.getRemoteDevice().getAddress());
+				if (bannedAddress.contains(clientSocket.getRemoteDevice().getAddress())) {
+					clientSocket.close();
+					Log.d(SERVICE_NAME, "A client denied: "+clientSocket.getRemoteDevice().getAddress());
+				} else {
+					Log.d(SERVICE_NAME, "A client is connected: "+clientSocket.getRemoteDevice().getAddress());
+					connections.add(new BeaconConnection(this, clientSocket, clientSocket.getRemoteDevice(), this));
+					startChatActivity(clientSocket.getRemoteDevice().getAddress());
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -140,6 +153,7 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 		super.onCreate();
 		Log.d(SERVICE_NAME, "onCreate");
 		new Thread(this).start();
+		getContentResolver().registerContentObserver(BlueBeaconProvider.CONTENT_URI_BEACON, false, observer);
 	}
 
 	@Override
@@ -153,6 +167,7 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 			}
 		}
 		disconnectAll();
+		getContentResolver().unregisterContentObserver(observer);
 		super.onDestroy();
 	}
 	
@@ -211,5 +226,29 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 	private void startChatActivity(String remoteAddress) {
 		startActivity(new Intent(this, ChatActivity.class).putExtra(ChatActivity.EXTRA_ADDRESS, remoteAddress)
 				.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+	}
+	
+	private void loadBannedBeacons() {
+		Cursor cursor = BlueBeaconProvider.queryBannedBeacons(getContentResolver());
+		bannedAddress.clear();
+		if (cursor.getCount() == 0)
+			return;
+		
+		cursor.moveToFirst();
+		do {
+			bannedAddress.add(cursor.getString(cursor.getColumnIndexOrThrow(BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ADDRESS)));
+		} while (cursor.moveToNext());
+		
+		checkBannedConnection();
+	}
+	
+	private void checkBannedConnection() {
+		synchronized(connections) {
+			for (BeaconConnection conn : connections) {
+				if (bannedAddress.contains(conn.remoteAddress)) {
+					conn.disconnect();
+				}
+			}
+		}
 	}
 }
