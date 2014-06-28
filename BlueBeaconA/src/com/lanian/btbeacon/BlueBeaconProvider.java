@@ -40,7 +40,7 @@ public class BlueBeaconProvider extends ContentProvider {
 		String tableName = getTableName(uri);
 		
 		if (tableName.equals(PATH_CONVERSATION)) {
-			return dbHelper.queryConversation(dbHelper.getReadableDatabase());
+			return dbHelper.queryConversation();
 		} else {
 			return dbHelper.getReadableDatabase().query(tableName, projection, selection, selectionArgs, null, null, sortOrder);
 		}

@@ -12,6 +12,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -47,12 +49,14 @@ public class StoredBeaconListFragment extends ListFragment implements LoaderMana
 	public void onActivityCreated(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
 		super.onActivityCreated(savedInstanceState);
+		getActivity().setTitle(banned?R.string.title_fragment_banned_beacons:R.string.title_fragment_beacons);
+		setHasOptionsMenu(true);
 		
 		registerForContextMenu(getListView());
 		
 		adapter = new ArrayAdapter<Beacon>(getActivity(), android.R.layout.simple_list_item_1);
 		setListAdapter(adapter);
-		loadStoredBeacons();
+		
 	}
 	
 	@Override
@@ -73,18 +77,18 @@ public class StoredBeaconListFragment extends ListFragment implements LoaderMana
 		registerContentObserver();
 	}
 	
-	private void registerContentObserver() {
-		getActivity().getContentResolver().registerContentObserver(BlueBeaconProvider.CONTENT_URI_BEACON, false, observer);
-	}
-	
-	private void unregisterContentObserver() {
-		getActivity().getContentResolver().unregisterContentObserver(observer);
-	}
-	
 	@Override
 	public void onStop() {
 		super.onStop();
 		unregisterContentObserver();
+	}
+	
+	private void registerContentObserver() {
+		getActivity().getContentResolver().registerContentObserver(BlueBeaconProvider.CONTENT_URI, true, observer);
+	}
+	
+	private void unregisterContentObserver() {
+		getActivity().getContentResolver().unregisterContentObserver(observer);
 	}
 	
 	@Override
@@ -105,7 +109,7 @@ public class StoredBeaconListFragment extends ListFragment implements LoaderMana
 		
 		return new CursorLoader(getActivity(), BlueBeaconProvider.CONTENT_URI_BEACON, 
 				new String[] {BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ADDRESS, BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_ALIAS}, 
-				BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_BANNED+"=?", new String[] {banned?"1":"0"}, null);
+				BlueBeaconDBHelper.BeaconEntry.COLUMN_NAME_BANNED+"=?", new String[] {String.valueOf(id)}, null);
 	}
 
 	@Override
@@ -182,4 +186,12 @@ public class StoredBeaconListFragment extends ListFragment implements LoaderMana
 			listener.onBeaconSelected(adapter.getItem(position).getAddress());
 		
 	}
+	
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		// TODO Auto-generated method stub
+		super.onCreateOptionsMenu(menu, inflater);
+		inflater.inflate(banned?R.menu.banned_beacon_list:R.menu.stored_beacon_list, menu);
+	}
+	
 }

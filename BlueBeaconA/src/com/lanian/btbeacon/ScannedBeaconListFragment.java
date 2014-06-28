@@ -31,11 +31,7 @@ public class ScannedBeaconListFragment extends ListFragment {
 	BluetoothDevice currentDevice;
 	ProgressDialog progressDialog;
 	ArrayAdapter<BluetoothDevice> adapter;
-	OnBeaconClickListener listener;
-	
-	public static interface OnBeaconClickListener {
-		public void onBeaconClick(BluetoothDevice dev); 
-	}
+	OnBeaconSelectedListener listener;
 	
 	BroadcastReceiver btScaningReceiver = new BroadcastReceiver() {
 
@@ -101,6 +97,9 @@ public class ScannedBeaconListFragment extends ListFragment {
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
+		
+		getActivity().setTitle(R.string.title_fragment_scan_beacons);
+		
 		setHasOptionsMenu(true);
 		
 		registerForContextMenu(getListView());
@@ -115,15 +114,15 @@ public class ScannedBeaconListFragment extends ListFragment {
 		super.onAttach(activity);
 		
 		try {
-			listener = (OnBeaconClickListener)activity;
+			listener = (OnBeaconSelectedListener)activity;
 		} catch (ClassCastException e) {
-			Log.w(TAG, "OnBeaconClickListener is not set");
+			Log.w(TAG, "OnBeaconSelectedListener is not set");
 		}
 	}
 		
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		inflater.inflate(R.menu.beacon_list, menu);
+		inflater.inflate(R.menu.scanned_beacon_list, menu);
 	}
 	
 	@Override
@@ -152,7 +151,7 @@ public class ScannedBeaconListFragment extends ListFragment {
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		if (listener != null) {
-			listener.onBeaconClick(adapter.getItem(position));
+			listener.onBeaconSelected(adapter.getItem(position).getAddress());
 		}
 	}
 	

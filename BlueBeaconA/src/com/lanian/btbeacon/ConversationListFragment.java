@@ -41,6 +41,7 @@ public class ConversationListFragment extends ListFragment implements LoaderMana
 		// TODO Auto-generated method stub
 		super.onActivityCreated(savedInstanceState);
 		
+		getActivity().setTitle(R.string.title_fragment_conversation);
 		registerForContextMenu(getListView());
 		
 		adapter = new ArrayAdapter<Beacon>(getActivity(), android.R.layout.simple_list_item_1);

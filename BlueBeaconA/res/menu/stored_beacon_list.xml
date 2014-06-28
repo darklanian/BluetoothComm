@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/action_banned_beacons" android:title="@string/action_banned_beacons"></item>
+    <item android:id="@+id/action_scanned_beacons" android:title="@string/action_scanned_beacons"></item>
+    <item android:id="@+id/action_conversations" android:showAsAction="always" android:title="@string/action_conversations" android:icon="@drawable/ic_list"></item>
+    
+
+</menu>

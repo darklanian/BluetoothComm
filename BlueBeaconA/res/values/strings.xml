@@ -35,5 +35,12 @@
     <string name="pref_service_off">Off</string>
     <string name="title_activity_settings">Settings</string>
     <string name="pref_title_switch_service">Service</string>
+    <string name="action_banned_beacons">Banned beacons</string>
+    <string name="action_scanned_beacons">Scan</string>
+    <string name="title_fragment_beacons">Beacons</string>
+    <string name="title_fragment_banned_beacons">Banned beacons</string>
+    <string name="title_fragment_scan_beacons">Scan beacons</string>
+    <string name="action_conversations">Conversations</string>
+    <string name="title_fragment_conversation">Conversations</string>
 
 </resources>
