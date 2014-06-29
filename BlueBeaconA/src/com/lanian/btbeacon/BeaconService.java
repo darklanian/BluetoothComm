@@ -261,10 +261,10 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 	@Override
 	public void onReceiveMessage(BeaconConnection conn, String message) {
 		if (beholdingAddress == null || !beholdingAddress.equals(conn.getRemoteAddress()))
-			showMessageNotification(conn.getRemoteAddress(), message);
+			notifyMessageReceived(conn.getRemoteAddress(), message);
 	}
 	
-	private void showMessageNotification(String remoteAddress, String message) {
+	private void notifyMessageReceived(String remoteAddress, String message) {
 		
 		NotificationManager nm = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
 		nm.notify(0, new Notification.Builder(this)
@@ -276,8 +276,4 @@ public class BeaconService extends Service implements Runnable, BeaconConnection
 			.build());
 	}
 	
-	/*private void startChatActivity(String remoteAddress) {
-		startActivity(new Intent(this, ChatActivity.class).putExtra(ChatActivity.EXTRA_ADDRESS, remoteAddress)
-				.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-	}*/
 }
